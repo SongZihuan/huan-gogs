@@ -181,6 +181,7 @@ func runWeb(c *cli.Context) error {
 
 	m.Group("", func() {
 		m.Get("/", ignSignIn, route.Home)
+		m.Get("/home", ignSignIn, route.Home)
 		m.Group("/explore", func() {
 			m.Get("", func(c *context.Context) {
 				c.Redirect(conf.Server.Subpath + "/explore/repos")
