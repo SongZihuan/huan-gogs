@@ -1325,12 +1325,13 @@ func (u *User) maxNumRepos() int {
 
 // canCreateRepo returns true if the user can create a repository.
 func (u *User) canCreateRepo() bool {
-	return (u.IsActive && u.IsAdmin) || u.maxNumRepos() <= -1 || u.NumRepos < u.maxNumRepos()
+	return u.IsOrganization() || (u.IsActive && u.IsAdmin) || u.maxNumRepos() <= -1 || u.NumRepos < u.maxNumRepos()
 }
 
 // CanCreateOrganization returns true if user can create organizations.
 func (u *User) CanCreateOrganization() bool {
-	return !conf.Admin.DisableRegularOrgCreation || u.IsAdmin
+	//return !conf.Admin.DisableRegularOrgCreation || u.IsAdmin
+	return u.IsAdmin // 确定只有Admin可以创建仓库
 }
 
 // CanEditGitHook returns true if user can edit Git hooks.
