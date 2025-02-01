@@ -132,6 +132,11 @@ func RenderUserSearch(c *context.Context, opts *UserSearchOptions) {
 }
 
 func ExploreUsers(c *context.Context) {
+	if !c.IsLogged || c.User == nil || !c.User.IsActive || !c.User.IsAdmin {
+		c.NotFound()
+		return
+	}
+
 	c.Data["Title"] = c.Tr("explore")
 	c.Data["PageIsExplore"] = true
 	c.Data["PageIsExploreUsers"] = true
