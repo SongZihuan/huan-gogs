@@ -69,12 +69,7 @@ func (err ErrLoginSourceMismatch) Error() string {
 func (s *UsersStore) Authenticate(ctx context.Context, login, password string, loginSourceID int64) (*User, error) {
 	login = strings.ToLower(login)
 
-	query := s.db.WithContext(ctx)
-	if strings.Contains(login, "@") {
-		query = query.Where("email = ?", login)
-	} else {
-		query = query.Where("lower_name = ?", login)
-	}
+	query := s.db.WithContext(ctx).Where("email = ? OR lower_name = ? OR login_name = ?", login, login, login)
 
 	user := new(User)
 	err := query.First(user).Error
@@ -148,6 +143,44 @@ func (s *UsersStore) Authenticate(ctx context.Context, login, password string, l
 			Admin:       extAccount.Admin,
 		},
 	)
+}
+
+func (s *UsersStore) AuthenticateByUser(ctx context.Context, user *User, password string, loginSourceID int64) error {
+	var authSourceID int64 // The login source ID will be used to authenticate the user
+
+	if loginSourceID >= 0 && user.LoginSource != loginSourceID {
+		return ErrLoginSourceMismatch{args: errutil.Args{"expect": loginSourceID, "actual": user.LoginSource}}
+	}
+
+	// Validate password hash fetched from database for local accounts.
+	if user.IsLocal() {
+		if userutil.ValidatePassword(user.Password, user.Salt, password) {
+			return nil
+		}
+
+		return auth.ErrBadCredentials{Args: map[string]any{"login": user.Name, "userID": user.ID}}
+	}
+
+	authSourceID = user.LoginSource
+
+	source, err := newLoginSourcesStore(s.db, loadedLoginSourceFilesStore).GetByID(ctx, authSourceID)
+	if err != nil {
+		return errors.Wrap(err, "get login source")
+	}
+
+	if !source.IsActived {
+		return errors.Errorf("login source %d is not activated", source.ID)
+	}
+
+	_, err = source.Provider.Authenticate(user.LoginName, password)
+	if err != nil {
+		_, err = source.Provider.Authenticate(user.Name, password)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // ChangeUsername changes the username of the given user and updates all
@@ -317,6 +350,10 @@ func (s *UsersStore) Create(ctx context.Context, username, email string, opts Cr
 		}
 	} else if !IsErrUserNotExist(err) {
 		return nil, err
+	}
+
+	if opts.LoginName == "" {
+		opts.LoginName = username
 	}
 
 	user := &User{
