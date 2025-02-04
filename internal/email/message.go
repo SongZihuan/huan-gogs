@@ -122,12 +122,15 @@ func (*Sender) Send(from string, to []string, msg io.WriterTo) error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 
 	isSecureConn := false
-	// Start TLS directly if the port ends with 465 (SMTPS protocol)
-	if strings.HasSuffix(port, "465") {
-		conn = tls.Client(conn, tlsconfig)
+	_conn := tls.Client(conn, tlsconfig)
+	err = _conn.Handshake()
+	if err == nil {
+		conn = _conn
 		isSecureConn = true
 	}
 
