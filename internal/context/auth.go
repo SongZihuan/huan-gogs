@@ -220,8 +220,7 @@ func authenticatedUser(store AuthStore, ctx *macaron.Context, sess session.Store
 
 					// Check if enabled auto-registration.
 					if conf.Auth.EnableReverseProxyAutoRegistration {
-						email := gouuid.NewV4().String() + "@localhost"
-
+						email := gouuid.NewV4().String() + "@fake.localhost"
 						user, err = store.CreateUser(
 							ctx.Req.Context(),
 							webAuthUser,

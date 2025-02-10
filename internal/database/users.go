@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	gouuid "github.com/satori/go.uuid"
 	"os"
 	"strings"
 	"time"
@@ -366,6 +367,7 @@ func (s *UsersStore) Create(ctx context.Context, username, email, publicEmail st
 		FullName:        opts.FullName,
 		Email:           email,
 		PublicEmail:     publicEmail,
+		LocalEmail:      gouuid.NewV4().String() + "@fake.localhost",
 		Password:        opts.Password,
 		LoginSource:     opts.LoginSource,
 		LoginName:       opts.LoginName,
@@ -1042,12 +1044,13 @@ func (s *UsersStore) Update(ctx context.Context, userID int64, opts UpdateUserOp
 		updates["email"] = *opts.Email
 	}
 	if opts.PublicEmail != nil {
-		_, err := s.GetByPublicEmail(ctx, *opts.Email)
-		if err == nil {
-			return ErrEmailAlreadyUsed{args: errutil.Args{"email": *opts.Email}}
-		} else if !IsErrUserNotExist(err) {
-			return errors.Wrap(err, "check email")
-		}
+		// 不检查用户之间的 Public Email 重复
+		//_, err := s.GetByPublicEmail(ctx, *opts.Email)
+		//if err == nil {
+		//	return ErrEmailAlreadyUsed{args: errutil.Args{"email": *opts.Email}}
+		//} else if !IsErrUserNotExist(err) {
+		//	return errors.Wrap(err, "check email")
+		//}
 		updates["email"] = *opts.Email
 	}
 	if opts.Website != nil {
@@ -1197,46 +1200,67 @@ func (s *UsersStore) ListEmails(ctx context.Context, userID int64) ([]*EmailAddr
 		return nil, errors.Wrap(err, "list emails")
 	}
 
-	isPrimaryFound := false
-	isPublicFound := false
+	var emailMap = make(map[string]*EmailAddress, 10)
 
 	for _, email := range emails {
-		if email.Email == user.Email {
-			isPrimaryFound = true
-			email.IsPrimary = true
-			break
+		if e, ok := emailMap[email.Email]; ok && e != nil {
+			continue
 		}
-	}
 
-	for _, email := range emails {
+		emailMap[email.Email] = email
+
+		if email.Email == user.Email {
+			email.IsPrimary = true
+		}
+
 		if email.Email == user.PublicEmail {
-			isPublicFound = true
 			email.IsPublic = true
-			break
+		}
+
+		if email.Email == user.LocalEmail {
+			email.IsActivated = true
+			email.IsLocal = true
 		}
 	}
 
 	// We always want the primary email address displayed, even if it's not in the
 	// email_address table yet.
-	if !isPrimaryFound && !isPublicFound {
-		emails = append(emails, &EmailAddress{
+	if email, ok := emailMap[user.Email]; !ok || email == nil {
+		email = &EmailAddress{
 			Email:       user.Email,
 			IsActivated: user.IsActive,
 			IsPrimary:   true,
+		}
+		emailMap[email.Email] = email
+		emails = append(emails, email)
+	} else {
+		email.IsPrimary = true
+	}
+
+	if email, ok := emailMap[user.PublicEmail]; !ok || email == nil {
+		email = &EmailAddress{
+			Email:       user.PublicEmail,
+			IsActivated: false,
 			IsPublic:    true,
-		})
-	} else if !isPrimaryFound {
-		emails = append(emails, &EmailAddress{
-			Email:       user.Email,
-			IsActivated: user.IsActive,
-			IsPrimary:   true,
-		})
-	} else if !isPublicFound {
-		emails = append(emails, &EmailAddress{
-			Email:       user.Email,
-			IsActivated: user.IsActive,
-			IsPublic:    true,
-		})
+		}
+		emailMap[email.Email] = email
+		emails = append(emails, email)
+	} else {
+		email.IsPublic = true
+	}
+
+	if email, ok := emailMap[user.LocalEmail]; !ok || email == nil {
+		email = &EmailAddress{
+			Email:       user.LocalEmail,
+			IsActivated: true,
+			IsLocal:     true,
+		}
+
+		emailMap[user.LocalEmail] = email
+		emails = append(emails, email)
+	} else {
+		email.IsActivated = true
+		email.IsLocal = true
 	}
 
 	return emails, nil
@@ -1296,8 +1320,13 @@ func (s *UsersStore) MarkEmailPrimary(ctx context.Context, userID int64, email s
 		return errors.Wrap(err, "get user")
 	}
 
+	if email == user.LocalEmail {
+		return ErrEmailNotExist{args: errutil.Args{"email": email}}
+	}
+
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// Make sure the former primary email doesn't disappear.
+		// 注册时初版的 Primary Email 不会被记录到 EmailAddress 数据表中
 		err = tx.FirstOrCreate(
 			&EmailAddress{
 				UserID:      user.ID,
@@ -1324,39 +1353,45 @@ func (s *UsersStore) MarkEmailPrimary(ctx context.Context, userID int64, email s
 }
 
 func (s *UsersStore) MarkEmailPublic(ctx context.Context, userID int64, email string) error {
-	var emailAddress EmailAddress
-	err := s.db.WithContext(ctx).Where("uid = ? AND email = ?", userID, email).First(&emailAddress).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ErrEmailNotExist{args: errutil.Args{"email": email}}
-		}
-		return errors.Wrap(err, "get email address")
-	}
-
-	if !emailAddress.IsActivated {
-		return ErrEmailNotVerified{args: errutil.Args{"email": email}}
-	}
-
 	user, err := s.GetByID(ctx, userID)
 	if err != nil {
 		return errors.Wrap(err, "get user")
 	}
 
+	if email != user.LocalEmail {
+		var emailAddress EmailAddress
+		err := s.db.WithContext(ctx).Where("uid = ? AND email = ?", userID, email).First(&emailAddress).Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrEmailNotExist{args: errutil.Args{"email": email}}
+			}
+			return errors.Wrap(err, "get email address")
+		}
+
+		if !emailAddress.IsActivated {
+			return ErrEmailNotVerified{args: errutil.Args{"email": email}}
+		}
+	}
+
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// Make sure the former primary email doesn't disappear.
-		err = tx.FirstOrCreate(
-			&EmailAddress{
-				UserID:      user.ID,
-				Email:       user.PublicEmail,
-				IsActivated: user.IsActive,
-			},
-			&EmailAddress{
-				UserID: user.ID,
-				Email:  user.PublicEmail,
-			},
-		).Error
-		if err != nil {
-			return errors.Wrap(err, "upsert former primary email address")
+		// 注册时初版的 Public Email 不会被记录到 EmailAddress 数据表中
+		// 如果是LocalEmail，则不记录
+		if user.PublicEmail == user.LocalEmail {
+			err = tx.FirstOrCreate(
+				&EmailAddress{
+					UserID:      user.ID,
+					Email:       user.PublicEmail,
+					IsActivated: user.IsActive,
+				},
+				&EmailAddress{
+					UserID: user.ID,
+					Email:  user.PublicEmail,
+				},
+			).Error
+			if err != nil {
+				return errors.Wrap(err, "upsert former primary email address")
+			}
 		}
 
 		return tx.Model(&User{}).
@@ -1381,9 +1416,11 @@ func (s *UsersStore) DeletePublicEmail(ctx context.Context, user *User) error {
 	}
 
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		err := s.db.WithContext(ctx).Where("uid = ? AND email = ?", user.ID, user.PublicEmail).Delete(&EmailAddress{}).Error
-		if err != nil {
-			return nil
+		if user.Email != user.LocalEmail {
+			err := s.db.WithContext(ctx).Where("uid = ? AND email = ?", user.ID, user.PublicEmail).Delete(&EmailAddress{}).Error
+			if err != nil {
+				return nil
+			}
 		}
 
 		user.PublicEmail = user.Email
@@ -1415,6 +1452,8 @@ type User struct {
 	Email string `xorm:"NOT NULL" gorm:"not null"`
 	// PublicEmail is the public email address
 	PublicEmail string `xorm:"NOT NULL" gorm:"not null"`
+	// LocalEmail is the fake email
+	LocalEmail  string `xorm:"NOT NULL" gorm:"not null"`
 	Password    string `xorm:"passwd NOT NULL" gorm:"column:passwd;not null"`
 	LoginSource int64  `xorm:"NOT NULL DEFAULT 0" gorm:"not null;default:0"`
 	LoginName   string
@@ -1771,6 +1810,7 @@ type EmailAddress struct {
 	IsActivated bool   `gorm:"not null;default:FALSE"`
 	IsPrimary   bool   `xorm:"-" gorm:"-" json:"-"`
 	IsPublic    bool   `xorm:"-" gorm:"-" json:"-"`
+	IsLocal     bool   `xorm:"-" gorm:"-" json:"-"`
 }
 
 // Follow represents relations of users and their followers.

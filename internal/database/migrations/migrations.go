@@ -65,6 +65,8 @@ var migrations = []Migration{
 	NewMigration("noop", func(*gorm.DB) error { return nil }),
 	// v22 -> v23:v0.14.0
 	NewMigration("add user.public_email column", addUserPublicEmail),
+	// v23 -> v24:v0.14.0
+	NewMigration("add user.local_email column", addUserLocalEmail),
 }
 
 var errMigrationSkipped = errors.New("the migration has been skipped")
