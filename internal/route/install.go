@@ -395,7 +395,7 @@ func InstallPost(c *context.Context, f form.Install) {
 			c.Req.Context(),
 			f.AdminName,
 			f.AdminEmail,
-			f.AdminEmail,
+			"",
 			database.CreateUserOptions{
 				Password:  f.AdminPasswd,
 				Activated: true,

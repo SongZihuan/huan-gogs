@@ -225,7 +225,7 @@ func authenticatedUser(store AuthStore, ctx *macaron.Context, sess session.Store
 							ctx.Req.Context(),
 							webAuthUser,
 							email,
-							email,
+							"",
 							database.CreateUserOptions{
 								Activated: true,
 							},

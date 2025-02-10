@@ -43,7 +43,7 @@ func CreateUser(c *context.APIContext, form api.CreateUserOption) {
 		c.Req.Context(),
 		form.Username,
 		form.Email,
-		form.Email,
+		"",
 		database.CreateUserOptions{
 			FullName:    form.FullName,
 			Password:    form.Password,

@@ -57,7 +57,7 @@ func (p *Provider) Authenticate(login, password string) (*auth.ExternalAccount, 
 		Name:        username,
 		FullName:    composeFullName(fn, sn, username),
 		Email:       email,
-		PublicEmail: email,
+		PublicEmail: "",
 		Admin:       isAdmin,
 	}, nil
 }

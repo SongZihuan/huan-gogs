@@ -156,7 +156,7 @@ func runCreateUser(c *cli.Context) error {
 		context.Background(),
 		c.String("name"),
 		c.String("email"),
-		c.String("email"),
+		"",
 		database.CreateUserOptions{
 			Password:  c.String("password"),
 			Activated: true,

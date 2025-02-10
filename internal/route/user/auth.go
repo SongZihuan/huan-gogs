@@ -339,7 +339,7 @@ func SignUpPost(c *context.Context, cpt *captcha.Captcha, f form.Register) {
 		c.Req.Context(),
 		f.UserName,
 		f.Email,
-		f.Email,
+		"",
 		database.CreateUserOptions{
 			Password:  f.Password,
 			Activated: !conf.Auth.RequireEmailConfirmation,

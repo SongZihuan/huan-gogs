@@ -35,7 +35,7 @@ func (p *Provider) Authenticate(login, password string) (*auth.ExternalAccount, 
 		Name:        login,
 		FullName:    fullname,
 		Email:       email,
-		PublicEmail: email,
+		PublicEmail: "",
 		Location:    location,
 		Website:     website,
 	}, nil

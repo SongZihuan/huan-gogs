@@ -85,7 +85,7 @@ func (p *Provider) Authenticate(login, password string) (*auth.ExternalAccount, 
 		Login:       login,
 		Name:        username,
 		Email:       login,
-		PublicEmail: login,
+		PublicEmail: "",
 	}, nil
 }
 

@@ -341,8 +341,10 @@ func (s *UsersStore) Create(ctx context.Context, username, email, publicEmail st
 		}
 	}
 
+	localEmail := gouuid.NewV4().String() + "@fake.localhost"
+
 	if publicEmail == "" {
-		publicEmail = email
+		publicEmail = localEmail
 	}
 
 	email = strings.ToLower(strings.TrimSpace(email))
@@ -367,7 +369,7 @@ func (s *UsersStore) Create(ctx context.Context, username, email, publicEmail st
 		FullName:        opts.FullName,
 		Email:           email,
 		PublicEmail:     publicEmail,
-		LocalEmail:      gouuid.NewV4().String() + "@fake.localhost",
+		LocalEmail:      localEmail,
 		Password:        opts.Password,
 		LoginSource:     opts.LoginSource,
 		LoginName:       opts.LoginName,
