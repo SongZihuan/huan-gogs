@@ -1083,7 +1083,7 @@ func initRepository(e Engine, repoPath string, doer *User, repo *Repository, opt
 			tmpDir,
 			&git.Signature{
 				Name:  doer.DisplayName(),
-				Email: doer.Email,
+				Email: doer.PublicEmail,
 				When:  time.Now(),
 			},
 		)

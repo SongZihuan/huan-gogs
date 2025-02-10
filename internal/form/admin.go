@@ -27,6 +27,7 @@ type AdminEditUser struct {
 	LoginName        string
 	FullName         string `binding:"MaxSize(100)"`
 	Email            string `binding:"Required;Email;MaxSize(254)"`
+	PublicEmail      string `binding:"Required;Email;MaxSize(254)"`
 	Password         string `binding:"MaxSize(255)"`
 	Website          string `binding:"MaxSize(50)"`
 	Location         string `binding:"MaxSize(50)"`

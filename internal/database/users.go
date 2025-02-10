@@ -361,6 +361,7 @@ func (s *UsersStore) Create(ctx context.Context, username, email string, opts Cr
 		Name:            username,
 		FullName:        opts.FullName,
 		Email:           email,
+		PublicEmail:     email,
 		Password:        opts.Password,
 		LoginSource:     opts.LoginSource,
 		LoginName:       opts.LoginName,
@@ -768,6 +769,45 @@ func (s *UsersStore) GetByEmail(ctx context.Context, email string) (*User, error
 	return user, nil
 }
 
+// GetByPublicEmail returns the user (not organization) with given public email.
+// It ignores records with unverified emails and returns ErrUserNotExist when not found.
+func (s *UsersStore) GetByPublicEmail(ctx context.Context, email string) (*User, error) {
+	if email == "" {
+		return nil, ErrUserNotExist{args: errutil.Args{"email": email}}
+	}
+	email = strings.ToLower(email)
+
+	/*
+		Equivalent SQL for PostgreSQL:
+
+		SELECT * FROM "user"
+		LEFT JOIN email_address ON email_address.uid = "user".id
+		WHERE
+			"user".type = @userType
+		AND (
+				"user".email = @email AND "user".is_active = TRUE
+			OR  email_address.email = @email AND email_address.is_activated = TRUE
+		)
+	*/
+	user := new(User)
+	err := s.db.WithContext(ctx).
+		Joins(dbutil.Quote("LEFT JOIN email_address ON email_address.uid = %s.id", "user"), true).
+		Where(dbutil.Quote("%s.type = ?", "user"), UserTypeIndividual).
+		Where(s.db.
+			Where(dbutil.Quote("%[1]s.public_email = ? AND %[1]s.is_active = ?", "user"), email, true).
+			Or("email_address.email = ? AND email_address.is_activated = ?", email, true),
+		).
+		First(&user).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrUserNotExist{args: errutil.Args{"email": email}}
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
 // GetByID returns the user with given ID. It returns ErrUserNotExist when not
 // found.
 func (s *UsersStore) GetByID(ctx context.Context, id int64) (*User, error) {
@@ -936,6 +976,7 @@ type UpdateUserOptions struct {
 
 	FullName    *string
 	Email       *string
+	PublicEmail *string
 	Website     *string
 	Location    *string
 	Description *string
@@ -975,6 +1016,7 @@ func (s *UsersStore) Update(ctx context.Context, userID int64, opts UpdateUserOp
 		updates["passwd"] = userutil.EncodePassword(*opts.Password, salt)
 		opts.GenerateNewRands = true
 	}
+
 	if opts.GenerateNewRands {
 		rands, err := userutil.RandomSalt()
 		if err != nil {
@@ -988,6 +1030,15 @@ func (s *UsersStore) Update(ctx context.Context, userID int64, opts UpdateUserOp
 	}
 	if opts.Email != nil {
 		_, err := s.GetByEmail(ctx, *opts.Email)
+		if err == nil {
+			return ErrEmailAlreadyUsed{args: errutil.Args{"email": *opts.Email}}
+		} else if !IsErrUserNotExist(err) {
+			return errors.Wrap(err, "check email")
+		}
+		updates["email"] = *opts.Email
+	}
+	if opts.PublicEmail != nil {
+		_, err := s.GetByPublicEmail(ctx, *opts.Email)
 		if err == nil {
 			return ErrEmailAlreadyUsed{args: errutil.Args{"email": *opts.Email}}
 		} else if !IsErrUserNotExist(err) {
@@ -1143,6 +1194,8 @@ func (s *UsersStore) ListEmails(ctx context.Context, userID int64) ([]*EmailAddr
 	}
 
 	isPrimaryFound := false
+	isPublicFound := false
+
 	for _, email := range emails {
 		if email.Email == user.Email {
 			isPrimaryFound = true
@@ -1151,15 +1204,37 @@ func (s *UsersStore) ListEmails(ctx context.Context, userID int64) ([]*EmailAddr
 		}
 	}
 
+	for _, email := range emails {
+		if email.Email == user.PublicEmail {
+			isPublicFound = true
+			email.IsPublic = true
+			break
+		}
+	}
+
 	// We always want the primary email address displayed, even if it's not in the
 	// email_address table yet.
-	if !isPrimaryFound {
+	if !isPrimaryFound && !isPublicFound {
+		emails = append(emails, &EmailAddress{
+			Email:       user.Email,
+			IsActivated: user.IsActive,
+			IsPrimary:   true,
+			IsPublic:    true,
+		})
+	} else if !isPrimaryFound {
 		emails = append(emails, &EmailAddress{
 			Email:       user.Email,
 			IsActivated: user.IsActive,
 			IsPrimary:   true,
 		})
+	} else if !isPublicFound {
+		emails = append(emails, &EmailAddress{
+			Email:       user.Email,
+			IsActivated: user.IsActive,
+			IsPublic:    true,
+		})
 	}
+
 	return emails, nil
 }
 
@@ -1244,9 +1319,78 @@ func (s *UsersStore) MarkEmailPrimary(ctx context.Context, userID int64, email s
 	})
 }
 
+func (s *UsersStore) MarkEmailPublic(ctx context.Context, userID int64, email string) error {
+	var emailAddress EmailAddress
+	err := s.db.WithContext(ctx).Where("uid = ? AND email = ?", userID, email).First(&emailAddress).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrEmailNotExist{args: errutil.Args{"email": email}}
+		}
+		return errors.Wrap(err, "get email address")
+	}
+
+	if !emailAddress.IsActivated {
+		return ErrEmailNotVerified{args: errutil.Args{"email": email}}
+	}
+
+	user, err := s.GetByID(ctx, userID)
+	if err != nil {
+		return errors.Wrap(err, "get user")
+	}
+
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// Make sure the former primary email doesn't disappear.
+		err = tx.FirstOrCreate(
+			&EmailAddress{
+				UserID:      user.ID,
+				Email:       user.PublicEmail,
+				IsActivated: user.IsActive,
+			},
+			&EmailAddress{
+				UserID: user.ID,
+				Email:  user.PublicEmail,
+			},
+		).Error
+		if err != nil {
+			return errors.Wrap(err, "upsert former primary email address")
+		}
+
+		return tx.Model(&User{}).
+			Where("id = ?", user.ID).
+			Updates(map[string]any{
+				"public_email": email,
+				"updated_unix": tx.NowFunc().Unix(),
+			},
+			).Error
+	})
+}
+
 // DeleteEmail deletes the email address of the given user.
 func (s *UsersStore) DeleteEmail(ctx context.Context, userID int64, email string) error {
 	return s.db.WithContext(ctx).Where("uid = ? AND email = ?", userID, email).Delete(&EmailAddress{}).Error
+}
+
+// DeletePublicEmail deletes the email address of the given user.
+func (s *UsersStore) DeletePublicEmail(ctx context.Context, user *User) error {
+	if user.PublicEmail == "" {
+		return nil
+	}
+
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err := s.db.WithContext(ctx).Where("uid = ? AND email = ?", user.ID, user.PublicEmail).Delete(&EmailAddress{}).Error
+		if err != nil {
+			return nil
+		}
+
+		user.PublicEmail = user.Email
+
+		updates := map[string]any{
+			"updated_unix": s.db.NowFunc().Unix(),
+			"public_email": user.PublicEmail,
+		}
+
+		return tx.Model(&User{}).Where("id = ?", user.ID).Updates(updates).Error
+	})
 }
 
 // UserType indicates the type of the user account.
@@ -1264,7 +1408,9 @@ type User struct {
 	Name      string `xorm:"UNIQUE NOT NULL" gorm:"not null"`
 	FullName  string
 	// Email is the primary email address (to be used for communication)
-	Email       string `xorm:"NOT NULL" gorm:"not null"`
+	Email string `xorm:"NOT NULL" gorm:"not null"`
+	// PublicEmail is the public email address
+	PublicEmail string `xorm:"NOT NULL" gorm:"not null"`
 	Password    string `xorm:"passwd NOT NULL" gorm:"column:passwd;not null"`
 	LoginSource int64  `xorm:"NOT NULL DEFAULT 0" gorm:"not null;default:0"`
 	LoginName   string
@@ -1338,7 +1484,7 @@ func (u *User) IsOrganization() bool {
 }
 
 // APIFormat returns the API format of a user.
-func (u *User) APIFormat() *api.User {
+func (u *User) APIFormat() *api.User { // TODO 待检查
 	return &api.User{
 		ID:        u.ID,
 		UserName:  u.Name,
@@ -1429,7 +1575,7 @@ func (u *User) AvatarURLPath() string {
 		return fmt.Sprintf("%s/%s/%d", conf.Server.Subpath, conf.UsersAvatarPathPrefix, u.ID)
 	case conf.Picture.DisableGravatar:
 		if !hasCustomAvatar {
-			if err := userutil.GenerateRandomAvatar(u.ID, u.Name, u.Email); err != nil {
+			if err := userutil.GenerateRandomAvatar(u.ID, u.Name, u.PublicEmail); err != nil {
 				log.Error("Failed to generate random avatar [user_id: %d]: %v", u.ID, err)
 			}
 		}
@@ -1620,6 +1766,7 @@ type EmailAddress struct {
 	Email       string `xorm:"UNIQUE NOT NULL" gorm:"uniqueIndex:email_address_user_email_unique;not null;size:254"`
 	IsActivated bool   `gorm:"not null;default:FALSE"`
 	IsPrimary   bool   `xorm:"-" gorm:"-" json:"-"`
+	IsPublic    bool   `xorm:"-" gorm:"-" json:"-"`
 }
 
 // Follow represents relations of users and their followers.

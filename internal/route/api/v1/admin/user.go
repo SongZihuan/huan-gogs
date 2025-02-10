@@ -71,7 +71,7 @@ func CreateUser(c *context.APIContext, form api.CreateUserOption) {
 	c.JSON(http.StatusCreated, user.APIFormat())
 }
 
-func EditUser(c *context.APIContext, form api.EditUserOption) {
+func EditUser(c *context.APIContext, form api.EditUserOption) { // TODO 代检查
 	u := user.GetUserByParams(c)
 	if c.Written() {
 		return

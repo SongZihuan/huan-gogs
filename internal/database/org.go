@@ -135,7 +135,7 @@ func CreateOrganization(org, owner *User) (err error) {
 	if _, err = sess.Insert(org); err != nil {
 		return fmt.Errorf("insert organization: %v", err)
 	}
-	_ = userutil.GenerateRandomAvatar(org.ID, org.Name, org.Email)
+	_ = userutil.GenerateRandomAvatar(org.ID, org.Name, org.PublicEmail)
 
 	// Add initial creator to organization and owner team.
 	if _, err = sess.Insert(&OrgUser{

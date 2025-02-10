@@ -63,6 +63,8 @@ var migrations = []Migration{
 	// on v22. Let's make a noop v22 to make sure every instance will not miss a
 	// real future migration.
 	NewMigration("noop", func(*gorm.DB) error { return nil }),
+	// v22 -> v23:v0.14.0
+	NewMigration("add user.public_email column", addUserPublicEmail),
 }
 
 var errMigrationSkipped = errors.New("the migration has been skipped")

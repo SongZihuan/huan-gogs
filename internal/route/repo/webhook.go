@@ -478,7 +478,7 @@ func TestWebhook(c *context.Context) {
 		ghost := database.NewGhostUser()
 		author = &git.Signature{
 			Name:  ghost.DisplayName(),
-			Email: ghost.Email,
+			Email: ghost.PublicEmail,
 			When:  time.Now(),
 		}
 		committer = author

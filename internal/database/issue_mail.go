@@ -39,6 +39,10 @@ func (this mailerUser) Email() string {
 	return this.user.Email
 }
 
+func (this mailerUser) PublicEmail() string {
+	return this.user.PublicEmail
+}
+
 func (this mailerUser) GenerateEmailActivateCode(email string) string {
 	return userutil.GenerateActivateCode(
 		this.user.ID,

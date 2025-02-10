@@ -203,6 +203,10 @@ func EditUserPost(c *context.Context, f form.AdminEditUser) {
 		opts.Email = &f.Email
 	}
 
+	if u.PublicEmail != f.PublicEmail {
+		opts.PublicEmail = &f.PublicEmail
+	}
+
 	err := database.Handle.Users().Update(c.Req.Context(), u.ID, opts)
 	if err != nil {
 		if database.IsErrEmailAlreadyUsed(err) {

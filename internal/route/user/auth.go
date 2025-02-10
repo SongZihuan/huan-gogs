@@ -387,6 +387,7 @@ func SignUpPost(c *context.Context, cpt *captcha.Captcha, f form.Register) {
 		email.SendActivateAccountMail(c.Context, database.NewMailerUser(user))
 		c.Data["IsSendRegisterMail"] = true
 		c.Data["Email"] = user.Email
+		c.Data["PublicEmail"] = user.PublicEmail
 		c.Data["Hours"] = conf.Auth.ActivateCodeLives / 60
 		c.Success(ACTIVATE)
 
@@ -426,7 +427,7 @@ func verifyUserActiveCode(code string) (user *database.User) {
 	if user = parseUserFromCode(code); user != nil {
 		// time limit code
 		prefix := code[:tool.TIME_LIMIT_CODE_LENGTH]
-		data := com.ToStr(user.ID) + user.Email + user.LowerName + user.Password + user.Rands
+		data := com.ToStr(user.ID) + user.Email + user.PublicEmail + user.LowerName + user.Password + user.Rands
 
 		if tool.VerifyTimeLimitCode(data, minutes, prefix) {
 			return user

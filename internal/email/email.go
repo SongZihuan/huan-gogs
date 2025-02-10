@@ -87,6 +87,7 @@ type User interface {
 	ID() int64
 	DisplayName() string
 	Email() string
+	PublicEmail() string
 	GenerateEmailActivateCode(string) string
 }
 

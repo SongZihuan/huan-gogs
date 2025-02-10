@@ -65,6 +65,7 @@ func Settings(c *context.Context) {
 	c.Data["name"] = c.User.Name
 	c.Data["full_name"] = c.User.FullName
 	c.Data["email"] = c.User.Email
+	c.Data["public_email"] = c.User.PublicEmail
 	c.Data["website"] = c.User.Website
 	c.Data["location"] = c.User.Location
 	c.Success(SETTINGS_PROFILE)
@@ -260,6 +261,15 @@ func SettingsEmailPost(c *context.Context, f form.AddEmail) {
 
 		c.RedirectSubpath("/user/settings/email")
 		return
+	} else if c.Query("_method") == "PUBLIC" {
+		err := database.Handle.Users().MarkEmailPublic(c.Req.Context(), c.User.ID, c.Query("email"))
+		if err != nil {
+			c.Errorf(err, "make email public")
+			return
+		}
+
+		c.RedirectSubpath("/user/settings/email")
+		return
 	}
 
 	// Add Email address.
@@ -308,12 +318,18 @@ func DeleteEmail(c *context.Context) {
 			"redirect": conf.Server.Subpath + "/user/settings/email",
 		})
 		return
-	}
-
-	err := database.Handle.Users().DeleteEmail(c.Req.Context(), c.User.ID, email)
-	if err != nil {
-		c.Error(err, "delete email address")
-		return
+	} else if c.User.PublicEmail == email {
+		err := database.Handle.Users().DeletePublicEmail(c.Req.Context(), c.User)
+		if err != nil {
+			c.Error(err, "delete public email address")
+			return
+		}
+	} else {
+		err := database.Handle.Users().DeleteEmail(c.Req.Context(), c.User.ID, email)
+		if err != nil {
+			c.Error(err, "delete email address")
+			return
+		}
 	}
 
 	c.Flash.Success(c.Tr("settings.email_deletion_success"))
