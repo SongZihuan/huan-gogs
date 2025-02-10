@@ -391,17 +391,11 @@ func InstallPost(c *context.Context, f form.Install) {
 
 	// Create admin account
 	if len(f.AdminName) > 0 {
-		user, err := database.Handle.Users().Create(
-			c.Req.Context(),
-			f.AdminName,
-			f.AdminEmail,
-			"",
-			database.CreateUserOptions{
-				Password:  f.AdminPasswd,
-				Activated: true,
-				Admin:     true,
-			},
-		)
+		user, err := database.Handle.Users().Create(c.Req.Context(), f.AdminName, f.AdminEmail, database.CreateUserOptions{
+			Password:  f.AdminPasswd,
+			Activated: true,
+			Admin:     true,
+		})
 		if err != nil {
 			if !database.IsErrUserAlreadyExist(err) {
 				conf.Security.InstallLock = false

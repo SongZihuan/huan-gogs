@@ -67,6 +67,8 @@ var migrations = []Migration{
 	NewMigration("add user.public_email column", addUserPublicEmail),
 	// v23 -> v24:v0.14.0
 	NewMigration("add user.local_email column", addUserLocalEmail),
+	// v24 -> v25:v0.14.0
+	NewMigration("insert user primary to database", insertUserPrimaryEmail),
 }
 
 var errMigrationSkipped = errors.New("the migration has been skipped")

@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/go-macaron/captcha"
-	"github.com/unknwon/com"
 	log "unknwon.dev/clog/v2"
 
 	"gogs.io/gogs/internal/auth"
@@ -335,16 +335,10 @@ func SignUpPost(c *context.Context, cpt *captcha.Captcha, f form.Register) {
 		return
 	}
 
-	user, err := database.Handle.Users().Create(
-		c.Req.Context(),
-		f.UserName,
-		f.Email,
-		"",
-		database.CreateUserOptions{
-			Password:  f.Password,
-			Activated: !conf.Auth.RequireEmailConfirmation,
-		},
-	)
+	user, err := database.Handle.Users().Create(c.Req.Context(), f.UserName, f.Email, database.CreateUserOptions{
+		Password:  f.Password,
+		Activated: !conf.Auth.RequireEmailConfirmation,
+	})
 	if err != nil {
 		switch {
 		case database.IsErrUserAlreadyExist(err):
@@ -428,7 +422,7 @@ func verifyUserActiveCode(code string) (user *database.User) {
 	if user = parseUserFromCode(code); user != nil {
 		// time limit code
 		prefix := code[:tool.TIME_LIMIT_CODE_LENGTH]
-		data := com.ToStr(user.ID) + user.Email + user.PublicEmail + user.LowerName + user.Password + user.Rands
+		data := fmt.Sprintf("%d%s%s%s%s", user.ID, user.Email, strings.ToLower(user.Name), user.Password, user.Rands)
 
 		if tool.VerifyTimeLimitCode(data, minutes, prefix) {
 			return user
@@ -444,7 +438,7 @@ func verifyActiveEmailCode(code, email string) *database.EmailAddress {
 	if user := parseUserFromCode(code); user != nil {
 		// time limit code
 		prefix := code[:tool.TIME_LIMIT_CODE_LENGTH]
-		data := com.ToStr(user.ID) + email + user.LowerName + user.Password + user.Rands
+		data := fmt.Sprintf("%d%s%s%s%s", user.ID, email, strings.ToLower(user.Name), user.Password, user.Rands)
 
 		if tool.VerifyTimeLimitCode(data, minutes, prefix) {
 			emailAddress, err := database.Handle.Users().GetEmail(gocontext.TODO(), user.ID, email, false)
@@ -485,14 +479,9 @@ func Activate(c *context.Context) {
 
 	// Verify code.
 	if user := verifyUserActiveCode(code); user != nil {
-		v := true
-		err := database.Handle.Users().Update(
+		err := database.Handle.Users().Active(
 			c.Req.Context(),
 			user.ID,
-			database.UpdateUserOptions{
-				GenerateNewRands: true,
-				IsActivated:      &v,
-			},
 		)
 		if err != nil {
 			c.Error(err, "update user")

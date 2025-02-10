@@ -113,7 +113,7 @@ func (*store) GetUserByUsername(ctx context.Context, username string) (*database
 }
 
 func (*store) CreateUser(ctx context.Context, username, email, publicEmail string, opts database.CreateUserOptions) (*database.User, error) {
-	return database.Handle.Users().Create(ctx, username, email, publicEmail, opts)
+	return database.Handle.Users().Create(ctx, username, email, opts)
 }
 
 func (*store) AuthenticateUser(ctx context.Context, login, password string, loginSourceID int64) (*database.User, error) {

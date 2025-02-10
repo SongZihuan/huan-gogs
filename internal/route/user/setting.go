@@ -324,7 +324,7 @@ func DeleteEmail(c *context.Context) {
 			c.Error(err, "delete public email address")
 			return
 		}
-	} else {
+	} else if c.User.LocalEmail != email {
 		err := database.Handle.Users().DeleteEmail(c.Req.Context(), c.User.ID, email)
 		if err != nil {
 			c.Error(err, "delete email address")

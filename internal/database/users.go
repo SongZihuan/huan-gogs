@@ -133,17 +133,15 @@ func (s *UsersStore) Authenticate(ctx context.Context, login, password string, l
 		return nil, fmt.Errorf("invalid pattern for attribute 'username' [%s]: must be valid alpha or numeric or dash(-_) or dot characters", extAccount.Name)
 	}
 
-	return s.Create(ctx, extAccount.Name, extAccount.Email, extAccount.PublicEmail,
-		CreateUserOptions{
-			FullName:    extAccount.FullName,
-			LoginSource: authSourceID,
-			LoginName:   extAccount.Login,
-			Location:    extAccount.Location,
-			Website:     extAccount.Website,
-			Activated:   true,
-			Admin:       extAccount.Admin,
-		},
-	)
+	return s.Create(ctx, extAccount.Name, extAccount.Email, CreateUserOptions{
+		FullName:    extAccount.FullName,
+		LoginSource: authSourceID,
+		LoginName:   extAccount.Login,
+		Location:    extAccount.Location,
+		Website:     extAccount.Website,
+		Activated:   true,
+		Admin:       extAccount.Admin,
+	})
 }
 
 func (s *UsersStore) AuthenticateByUser(ctx context.Context, user *User, password string, loginSourceID int64) error {
@@ -327,7 +325,7 @@ func (err ErrEmailAlreadyUsed) Error() string {
 // ErrNameNotAllowed if the given name or pattern of the name is not allowed as
 // a username, or ErrUserAlreadyExist when a user with same name already exists,
 // or ErrEmailAlreadyUsed if the email has been verified by another user.
-func (s *UsersStore) Create(ctx context.Context, username, email, publicEmail string, opts CreateUserOptions) (*User, error) {
+func (s *UsersStore) Create(ctx context.Context, username, email string, opts CreateUserOptions) (*User, error) {
 	err := isUsernameAllowed(username)
 	if err != nil {
 		return nil, err
@@ -342,10 +340,6 @@ func (s *UsersStore) Create(ctx context.Context, username, email, publicEmail st
 	}
 
 	localEmail := gouuid.NewV4().String() + "@fake.localhost"
-
-	if publicEmail == "" {
-		publicEmail = localEmail
-	}
 
 	email = strings.ToLower(strings.TrimSpace(email))
 	_, err = s.GetByEmail(ctx, email)
@@ -368,7 +362,7 @@ func (s *UsersStore) Create(ctx context.Context, username, email, publicEmail st
 		Name:            username,
 		FullName:        opts.FullName,
 		Email:           email,
-		PublicEmail:     publicEmail,
+		PublicEmail:     localEmail,
 		LocalEmail:      localEmail,
 		Password:        opts.Password,
 		LoginSource:     opts.LoginSource,
@@ -391,6 +385,20 @@ func (s *UsersStore) Create(ctx context.Context, username, email, publicEmail st
 		return nil, err
 	}
 	user.Password = userutil.EncodePassword(user.Password, user.Salt)
+
+	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err := s.db.WithContext(ctx).Create(user).Error
+		if err == nil {
+			return err
+		}
+
+		err = s.addEmail(tx, user.ID, user.Email, !conf.Auth.RequireEmailConfirmation)
+		if err == nil {
+			return err
+		}
+
+		return nil
+	})
 
 	return user, s.db.WithContext(ctx).Create(user).Error
 }
@@ -740,6 +748,45 @@ func (ErrUserNotExist) NotFound() bool {
 
 // GetByEmail returns the user (not organization) with given email. It ignores
 // records with unverified emails and returns ErrUserNotExist when not found.
+func (s *UsersStore) getByEmail(tx *gorm.DB, email string) (*User, error) {
+	if email == "" {
+		return nil, ErrUserNotExist{args: errutil.Args{"email": email}}
+	}
+	email = strings.ToLower(email)
+
+	/*
+		Equivalent SQL for PostgreSQL:
+
+		SELECT * FROM "user"
+		LEFT JOIN email_address ON email_address.uid = "user".id
+		WHERE
+			"user".type = @userType
+		AND (
+				"user".email = @email AND "user".is_active = TRUE
+			OR  email_address.email = @email AND email_address.is_activated = TRUE
+		)
+	*/
+	user := new(User)
+	err := tx.
+		Joins(dbutil.Quote("LEFT JOIN email_address ON email_address.uid = %s.id", "user"), true).
+		Where(dbutil.Quote("%s.type = ?", "user"), UserTypeIndividual).
+		Where(tx.
+			Where(dbutil.Quote("%[1]s.email = ? AND %[1]s.is_active = ?", "user"), email, true).
+			Or("email_address.email = ? AND email_address.is_activated = ?", email, true),
+		).
+		First(&user).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrUserNotExist{args: errutil.Args{"email": email}}
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
+// GetByEmail returns the user (not organization) with given email. It ignores
+// records with unverified emails and returns ErrUserNotExist when not found.
 func (s *UsersStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	if email == "" {
 		return nil, ErrUserNotExist{args: errutil.Args{"email": email}}
@@ -777,39 +824,14 @@ func (s *UsersStore) GetByEmail(ctx context.Context, email string) (*User, error
 	return user, nil
 }
 
-// GetByPublicEmail returns the user (not organization) with given public email.
-// It ignores records with unverified emails and returns ErrUserNotExist when not found.
-func (s *UsersStore) GetByPublicEmail(ctx context.Context, email string) (*User, error) {
-	if email == "" {
-		return nil, ErrUserNotExist{args: errutil.Args{"email": email}}
-	}
-	email = strings.ToLower(email)
-
-	/*
-		Equivalent SQL for PostgreSQL:
-
-		SELECT * FROM "user"
-		LEFT JOIN email_address ON email_address.uid = "user".id
-		WHERE
-			"user".type = @userType
-		AND (
-				"user".email = @email AND "user".is_active = TRUE
-			OR  email_address.email = @email AND email_address.is_activated = TRUE
-		)
-	*/
+// GetByID returns the user with given ID. It returns ErrUserNotExist when not
+// found.
+func (s *UsersStore) getByID(tx *gorm.DB, id int64) (*User, error) {
 	user := new(User)
-	err := s.db.WithContext(ctx).
-		Joins(dbutil.Quote("LEFT JOIN email_address ON email_address.uid = %s.id", "user"), true).
-		Where(dbutil.Quote("%s.type = ?", "user"), UserTypeIndividual).
-		Where(s.db.
-			Where(dbutil.Quote("%[1]s.public_email = ? AND %[1]s.is_active = ?", "user"), email, true).
-			Or("email_address.email = ? AND email_address.is_activated = ?", email, true),
-		).
-		First(&user).
-		Error
+	err := tx.Where("id = ?", id).First(user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrUserNotExist{args: errutil.Args{"email": email}}
+			return nil, ErrUserNotExist{args: errutil.Args{"userID": id}}
 		}
 		return nil, err
 	}
@@ -1053,7 +1075,7 @@ func (s *UsersStore) Update(ctx context.Context, userID int64, opts UpdateUserOp
 		//} else if !IsErrUserNotExist(err) {
 		//	return errors.Wrap(err, "check email")
 		//}
-		updates["email"] = *opts.Email
+		updates["public_email"] = *opts.PublicEmail
 	}
 	if opts.Website != nil {
 		updates["website"] = strutil.Truncate(*opts.Website, 255)
@@ -1101,6 +1123,42 @@ func (s *UsersStore) Update(ctx context.Context, userID int64, opts UpdateUserOp
 	return s.db.WithContext(ctx).Model(&User{}).Where("id = ?", userID).Updates(updates).Error
 }
 
+func (s *UsersStore) Active(ctx context.Context, userID int64) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		user, err := s.getByID(tx, userID)
+		if err != nil {
+			return err
+		}
+
+		emailUser, err := s.getByEmail(tx, user.Email)
+		if err == nil && emailUser.ID != user.ID {
+			return ErrEmailAlreadyUsed{args: errutil.Args{"email": user.Email}}
+		} else if !IsErrUserNotExist(err) {
+			return errors.Wrap(err, "check email")
+		}
+
+		err = s.markEmailActivated(tx, user.ID, user.Email)
+		if err != nil {
+			return err
+		}
+
+		rands, err := userutil.RandomSalt()
+		if err != nil {
+			return errors.Wrap(err, "generate rands")
+		}
+
+		user.UpdatedUnix = s.db.NowFunc().Unix()
+		user.Rands = rands
+
+		err = tx.Save(user).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
 // UseCustomAvatar uses the given avatar as the user custom avatar.
 func (s *UsersStore) UseCustomAvatar(ctx context.Context, userID int64, avatar []byte) error {
 	err := userutil.SaveAvatar(userID, avatar)
@@ -1116,6 +1174,30 @@ func (s *UsersStore) UseCustomAvatar(ctx context.Context, userID int64, avatar [
 			"updated_unix":      s.db.NowFunc().Unix(),
 		}).
 		Error
+}
+
+// AddEmail adds a new email address to given user. It returns
+// ErrEmailAlreadyUsed if the email has been verified by another user.
+func (s *UsersStore) addEmail(tx *gorm.DB, userID int64, email string, isActivated bool) error {
+	email = strings.ToLower(strings.TrimSpace(email))
+	_, err := s.getByEmail(tx, email)
+	if err == nil {
+		return ErrEmailAlreadyUsed{
+			args: errutil.Args{
+				"email": email,
+			},
+		}
+	} else if !IsErrUserNotExist(err) {
+		return errors.Wrap(err, "check user by email")
+	}
+
+	return tx.Create(
+		&EmailAddress{
+			UserID:      userID,
+			Email:       email,
+			IsActivated: isActivated,
+		},
+	).Error
 }
 
 // AddEmail adds a new email address to given user. It returns
@@ -1209,6 +1291,7 @@ func (s *UsersStore) ListEmails(ctx context.Context, userID int64) ([]*EmailAddr
 			continue
 		}
 
+		email.NotExists = false
 		emailMap[email.Email] = email
 
 		if email.Email == user.Email {
@@ -1232,6 +1315,7 @@ func (s *UsersStore) ListEmails(ctx context.Context, userID int64) ([]*EmailAddr
 			Email:       user.Email,
 			IsActivated: user.IsActive,
 			IsPrimary:   true,
+			NotExists:   true,
 		}
 		emailMap[email.Email] = email
 		emails = append(emails, email)
@@ -1244,6 +1328,7 @@ func (s *UsersStore) ListEmails(ctx context.Context, userID int64) ([]*EmailAddr
 			Email:       user.PublicEmail,
 			IsActivated: false,
 			IsPublic:    true,
+			NotExists:   true,
 		}
 		emailMap[email.Email] = email
 		emails = append(emails, email)
@@ -1256,6 +1341,7 @@ func (s *UsersStore) ListEmails(ctx context.Context, userID int64) ([]*EmailAddr
 			Email:       user.LocalEmail,
 			IsActivated: true,
 			IsLocal:     true,
+			NotExists:   false,
 		}
 
 		emailMap[user.LocalEmail] = email
@@ -1263,9 +1349,25 @@ func (s *UsersStore) ListEmails(ctx context.Context, userID int64) ([]*EmailAddr
 	} else {
 		email.IsActivated = true
 		email.IsLocal = true
+		email.NotExists = false
 	}
 
 	return emails, nil
+}
+
+// MarkEmailActivated marks the email address of the given user as activated,
+// and new rands are generated for the user.
+func (s *UsersStore) markEmailActivated(tx *gorm.DB, userID int64, email string) error {
+	err := tx.
+		Model(&EmailAddress{}).
+		Where("uid = ? AND email = ?", userID, email).
+		Update("is_activated", true).
+		Error
+	if err != nil {
+		return errors.Wrap(err, "mark email activated")
+	}
+
+	return nil
 }
 
 // MarkEmailActivated marks the email address of the given user as activated,
@@ -1327,23 +1429,6 @@ func (s *UsersStore) MarkEmailPrimary(ctx context.Context, userID int64, email s
 	}
 
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// Make sure the former primary email doesn't disappear.
-		// 注册时初版的 Primary Email 不会被记录到 EmailAddress 数据表中
-		err = tx.FirstOrCreate(
-			&EmailAddress{
-				UserID:      user.ID,
-				Email:       user.Email,
-				IsActivated: user.IsActive,
-			},
-			&EmailAddress{
-				UserID: user.ID,
-				Email:  user.Email,
-			},
-		).Error
-		if err != nil {
-			return errors.Wrap(err, "upsert former primary email address")
-		}
-
 		return tx.Model(&User{}).
 			Where("id = ?", user.ID).
 			Updates(map[string]any{
@@ -1376,26 +1461,6 @@ func (s *UsersStore) MarkEmailPublic(ctx context.Context, userID int64, email st
 	}
 
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// Make sure the former primary email doesn't disappear.
-		// 注册时初版的 Public Email 不会被记录到 EmailAddress 数据表中
-		// 如果是LocalEmail，则不记录
-		if user.PublicEmail == user.LocalEmail {
-			err = tx.FirstOrCreate(
-				&EmailAddress{
-					UserID:      user.ID,
-					Email:       user.PublicEmail,
-					IsActivated: user.IsActive,
-				},
-				&EmailAddress{
-					UserID: user.ID,
-					Email:  user.PublicEmail,
-				},
-			).Error
-			if err != nil {
-				return errors.Wrap(err, "upsert former primary email address")
-			}
-		}
-
 		return tx.Model(&User{}).
 			Where("id = ?", user.ID).
 			Updates(map[string]any{
@@ -1425,7 +1490,7 @@ func (s *UsersStore) DeletePublicEmail(ctx context.Context, user *User) error {
 			}
 		}
 
-		user.PublicEmail = user.Email
+		user.PublicEmail = user.LocalEmail
 
 		updates := map[string]any{
 			"updated_unix": s.db.NowFunc().Unix(),
@@ -1813,6 +1878,7 @@ type EmailAddress struct {
 	IsPrimary   bool   `xorm:"-" gorm:"-" json:"-"`
 	IsPublic    bool   `xorm:"-" gorm:"-" json:"-"`
 	IsLocal     bool   `xorm:"-" gorm:"-" json:"-"`
+	NotExists   bool   `xorm:"-" gorm:"-" json:"-"`
 }
 
 // Follow represents relations of users and their followers.

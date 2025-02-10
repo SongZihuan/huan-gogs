@@ -22,10 +22,10 @@ func addUserLocalEmail(db *gorm.DB) error {
 			return err
 		}
 
-		const Limit = 100
+		const limit = 100
 		for {
 			var res []User
-			err := tx.Table("user").Where("local_email = ''").Limit(Limit).Find(&res).Error
+			err := tx.Table("user").Where("type = ?", 0).Where("local_email = ''").Limit(limit).Find(&res).Error
 			if err != nil {
 				return errors.Wrap(err, "query user")
 			}
@@ -38,7 +38,7 @@ func addUserLocalEmail(db *gorm.DB) error {
 				}
 			}
 
-			if len(res) < Limit {
+			if len(res) < limit {
 				break
 			}
 		}

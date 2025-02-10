@@ -39,19 +39,13 @@ func CreateUser(c *context.APIContext, form api.CreateUserOption) {
 		return
 	}
 
-	user, err := database.Handle.Users().Create(
-		c.Req.Context(),
-		form.Username,
-		form.Email,
-		"",
-		database.CreateUserOptions{
-			FullName:    form.FullName,
-			Password:    form.Password,
-			LoginSource: form.SourceID,
-			LoginName:   form.LoginName,
-			Activated:   true,
-		},
-	)
+	user, err := database.Handle.Users().Create(c.Req.Context(), form.Username, form.Email, database.CreateUserOptions{
+		FullName:    form.FullName,
+		Password:    form.Password,
+		LoginSource: form.SourceID,
+		LoginName:   form.LoginName,
+		Activated:   true,
+	})
 	if err != nil {
 		if database.IsErrUserAlreadyExist(err) ||
 			database.IsErrEmailAlreadyUsed(err) ||

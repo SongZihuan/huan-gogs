@@ -152,17 +152,11 @@ func runCreateUser(c *cli.Context) error {
 		return errors.Wrap(err, "set engine")
 	}
 
-	user, err := database.Handle.Users().Create(
-		context.Background(),
-		c.String("name"),
-		c.String("email"),
-		"",
-		database.CreateUserOptions{
-			Password:  c.String("password"),
-			Activated: true,
-			Admin:     c.Bool("admin"),
-		},
-	)
+	user, err := database.Handle.Users().Create(context.Background(), c.String("name"), c.String("email"), database.CreateUserOptions{
+		Password:  c.String("password"),
+		Activated: true,
+		Admin:     c.Bool("admin"),
+	})
 	if err != nil {
 		return errors.Wrap(err, "create user")
 	}

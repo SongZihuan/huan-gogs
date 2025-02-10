@@ -19,7 +19,7 @@ func addUserPublicEmail(db *gorm.DB) error {
 			return err
 		}
 
-		err = tx.Exec("UPDATE `user` SET `public_email` = `email` WHERE `public_email` = ''").Error
+		err = tx.Exec("UPDATE `user` SET `public_email` = `email` WHERE `public_email` = '' AND `type` = 0").Error
 		if err != nil {
 			return err
 		}
