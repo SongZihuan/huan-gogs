@@ -1429,6 +1429,15 @@ func (s *UsersStore) MarkEmailPrimary(ctx context.Context, userID int64, email s
 	}
 
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err = tx.FirstOrCreate(&EmailAddress{
+			UserID:      user.ID,
+			Email:       user.Email,
+			IsActivated: false,
+		}, &EmailAddress{
+			UserID: user.ID,
+			Email:  user.Email,
+		}).Error
+
 		return tx.Model(&User{}).
 			Where("id = ?", user.ID).
 			Updates(map[string]any{
@@ -1461,6 +1470,18 @@ func (s *UsersStore) MarkEmailPublic(ctx context.Context, userID int64, email st
 	}
 
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err = tx.FirstOrCreate(&EmailAddress{
+			UserID:      user.ID,
+			Email:       user.PublicEmail,
+			IsActivated: false,
+		}, &EmailAddress{
+			UserID: user.ID,
+			Email:  user.PublicEmail,
+		}).Error
+		if err != nil {
+			return err
+		}
+
 		return tx.Model(&User{}).
 			Where("id = ?", user.ID).
 			Updates(map[string]any{
