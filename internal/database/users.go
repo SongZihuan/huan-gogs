@@ -132,7 +132,7 @@ func (s *UsersStore) Authenticate(ctx context.Context, login, password string, l
 		return nil, fmt.Errorf("invalid pattern for attribute 'username' [%s]: must be valid alpha or numeric or dash(-_) or dot characters", extAccount.Name)
 	}
 
-	return s.Create(ctx, extAccount.Name, extAccount.Email,
+	return s.Create(ctx, extAccount.Name, extAccount.Email, extAccount.PublicEmail,
 		CreateUserOptions{
 			FullName:    extAccount.FullName,
 			LoginSource: authSourceID,
@@ -326,7 +326,7 @@ func (err ErrEmailAlreadyUsed) Error() string {
 // ErrNameNotAllowed if the given name or pattern of the name is not allowed as
 // a username, or ErrUserAlreadyExist when a user with same name already exists,
 // or ErrEmailAlreadyUsed if the email has been verified by another user.
-func (s *UsersStore) Create(ctx context.Context, username, email string, opts CreateUserOptions) (*User, error) {
+func (s *UsersStore) Create(ctx context.Context, username, email, publicEmail string, opts CreateUserOptions) (*User, error) {
 	err := isUsernameAllowed(username)
 	if err != nil {
 		return nil, err
@@ -338,6 +338,10 @@ func (s *UsersStore) Create(ctx context.Context, username, email string, opts Cr
 				"name": username,
 			},
 		}
+	}
+
+	if publicEmail == "" {
+		publicEmail = email
 	}
 
 	email = strings.ToLower(strings.TrimSpace(email))
@@ -361,7 +365,7 @@ func (s *UsersStore) Create(ctx context.Context, username, email string, opts Cr
 		Name:            username,
 		FullName:        opts.FullName,
 		Email:           email,
-		PublicEmail:     email,
+		PublicEmail:     publicEmail,
 		Password:        opts.Password,
 		LoginSource:     opts.LoginSource,
 		LoginName:       opts.LoginName,

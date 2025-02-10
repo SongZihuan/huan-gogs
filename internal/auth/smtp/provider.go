@@ -82,9 +82,10 @@ func (p *Provider) Authenticate(login, password string) (*auth.ExternalAccount, 
 	}
 
 	return &auth.ExternalAccount{
-		Login: login,
-		Name:  username,
-		Email: login,
+		Login:       login,
+		Name:        username,
+		Email:       login,
+		PublicEmail: login,
 	}, nil
 }
 

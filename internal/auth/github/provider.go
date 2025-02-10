@@ -31,12 +31,13 @@ func (p *Provider) Authenticate(login, password string) (*auth.ExternalAccount, 
 		return nil, err
 	}
 	return &auth.ExternalAccount{
-		Login:    login,
-		Name:     login,
-		FullName: fullname,
-		Email:    email,
-		Location: location,
-		Website:  website,
+		Login:       login,
+		Name:        login,
+		FullName:    fullname,
+		Email:       email,
+		PublicEmail: email,
+		Location:    location,
+		Website:     website,
 	}, nil
 }
 

@@ -88,7 +88,7 @@ func NewUserPost(c *context.Context, f form.AdminCrateUser) {
 		}
 	}
 
-	user, err := database.Handle.Users().Create(c.Req.Context(), f.UserName, f.Email, createUserOpts)
+	user, err := database.Handle.Users().Create(c.Req.Context(), f.UserName, f.Email, f.PublicEmail, createUserOpts)
 	if err != nil {
 		switch {
 		case database.IsErrUserAlreadyExist(err):

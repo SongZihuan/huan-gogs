@@ -69,6 +69,8 @@ type ExternalAccount struct {
 	FullName string
 	// The email address of the account.
 	Email string
+	// The public email address of the account.
+	PublicEmail string
 	// The location of the account.
 	Location string
 	// The website of the account.

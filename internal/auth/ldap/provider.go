@@ -53,11 +53,12 @@ func (p *Provider) Authenticate(login, password string) (*auth.ExternalAccount, 
 	}
 
 	return &auth.ExternalAccount{
-		Login:    login,
-		Name:     username,
-		FullName: composeFullName(fn, sn, username),
-		Email:    email,
-		Admin:    isAdmin,
+		Login:       login,
+		Name:        username,
+		FullName:    composeFullName(fn, sn, username),
+		Email:       email,
+		PublicEmail: email,
+		Admin:       isAdmin,
 	}, nil
 }
 

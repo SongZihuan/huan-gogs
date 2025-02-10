@@ -136,7 +136,7 @@ func TestUsers(t *testing.T) {
 
 func usersAuthenticate(t *testing.T, ctx context.Context, s *UsersStore) {
 	password := "pa$$word"
-	alice, err := s.Create(ctx, "alice", "alice@example.com",
+	alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com",
 		CreateUserOptions{
 			Password: password,
 		},
@@ -189,7 +189,7 @@ func usersAuthenticate(t *testing.T, ctx context.Context, s *UsersStore) {
 		)
 		require.NoError(t, err)
 
-		bob, err := s.Create(ctx, "bob", "bob@example.com",
+		bob, err := s.Create(ctx, "bob", "bob@example.com", "bob@example.com",
 			CreateUserOptions{
 				Password:    password,
 				LoginSource: 1,
@@ -235,6 +235,7 @@ func usersChangeUsername(t *testing.T, ctx context.Context, s *UsersStore) {
 		ctx,
 		"alice",
 		"alice@example.com",
+		"alice@example.com",
 		CreateUserOptions{
 			Activated: true,
 		},
@@ -256,6 +257,7 @@ func usersChangeUsername(t *testing.T, ctx context.Context, s *UsersStore) {
 		bob, err := s.Create(
 			ctx,
 			"bob",
+			"bob@example.com",
 			"bob@example.com",
 			CreateUserOptions{
 				Activated: true,
@@ -365,14 +367,14 @@ func usersCount(t *testing.T, ctx context.Context, s *UsersStore) {
 	got := s.Count(ctx)
 	assert.Equal(t, int64(0), got)
 
-	_, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	_, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 	got = s.Count(ctx)
 	assert.Equal(t, int64(1), got)
 
 	// Create an organization shouldn't count
 	// TODO: Use Orgs.Create to replace SQL hack when the method is available.
-	org1, err := s.Create(ctx, "org1", "org1@example.com", CreateUserOptions{})
+	org1, err := s.Create(ctx, "org1", "org1@example.com", "org1@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 	err = s.db.Exec(
 		dbutil.Quote("UPDATE %s SET type = ? WHERE id = ?", "user"),
@@ -388,6 +390,7 @@ func usersCreate(t *testing.T, ctx context.Context, s *UsersStore) {
 		ctx,
 		"alice",
 		"alice@example.com",
+		"alice@example.com",
 		CreateUserOptions{
 			Activated: true,
 		},
@@ -395,7 +398,7 @@ func usersCreate(t *testing.T, ctx context.Context, s *UsersStore) {
 	require.NoError(t, err)
 
 	t.Run("name not allowed", func(t *testing.T) {
-		_, err := s.Create(ctx, "-", "", CreateUserOptions{})
+		_, err := s.Create(ctx, "-", "", "", CreateUserOptions{})
 		wantErr := ErrNameNotAllowed{
 			args: errutil.Args{
 				"reason": "reserved",
@@ -406,7 +409,7 @@ func usersCreate(t *testing.T, ctx context.Context, s *UsersStore) {
 	})
 
 	t.Run("name already exists", func(t *testing.T) {
-		_, err := s.Create(ctx, alice.Name, "", CreateUserOptions{})
+		_, err := s.Create(ctx, alice.Name, "", "", CreateUserOptions{})
 		wantErr := ErrUserAlreadyExist{
 			args: errutil.Args{
 				"name": alice.Name,
@@ -416,7 +419,7 @@ func usersCreate(t *testing.T, ctx context.Context, s *UsersStore) {
 	})
 
 	t.Run("email already exists", func(t *testing.T) {
-		_, err := s.Create(ctx, "bob", alice.Email, CreateUserOptions{})
+		_, err := s.Create(ctx, "bob", alice.Email, alice.PublicEmail, CreateUserOptions{})
 		wantErr := ErrEmailAlreadyUsed{
 			args: errutil.Args{
 				"email": alice.Email,
@@ -432,7 +435,7 @@ func usersCreate(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersDeleteCustomAvatar(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	avatar, err := public.Files.ReadFile("img/avatar_default.png")
@@ -469,7 +472,7 @@ func usersDeleteByID(t *testing.T, ctx context.Context, s *UsersStore) {
 	reposStore := newReposStore(s.db)
 
 	t.Run("user still has repository ownership", func(t *testing.T) {
-		alice, err := s.Create(ctx, "alice", "alice@exmaple.com", CreateUserOptions{})
+		alice, err := s.Create(ctx, "alice", "alice@exmaple.com", "alice@exmaple.com", CreateUserOptions{})
 		require.NoError(t, err)
 
 		_, err = reposStore.Create(ctx, alice.ID, CreateRepoOptions{Name: "repo1"})
@@ -481,11 +484,11 @@ func usersDeleteByID(t *testing.T, ctx context.Context, s *UsersStore) {
 	})
 
 	t.Run("user still has organization membership", func(t *testing.T) {
-		bob, err := s.Create(ctx, "bob", "bob@exmaple.com", CreateUserOptions{})
+		bob, err := s.Create(ctx, "bob", "bob@exmaple.com", "bob@exmaple.com", CreateUserOptions{})
 		require.NoError(t, err)
 
 		// TODO: Use Orgs.Create to replace SQL hack when the method is available.
-		org1, err := s.Create(ctx, "org1", "org1@example.com", CreateUserOptions{})
+		org1, err := s.Create(ctx, "org1", "org1@example.com", "org1@example.com", CreateUserOptions{})
 		require.NoError(t, err)
 		err = s.db.Exec(
 			dbutil.Quote("UPDATE %s SET type = ? WHERE id IN (?)", "user"),
@@ -502,14 +505,14 @@ func usersDeleteByID(t *testing.T, ctx context.Context, s *UsersStore) {
 		assert.Equal(t, wantErr, err)
 	})
 
-	cindy, err := s.Create(ctx, "cindy", "cindy@exmaple.com", CreateUserOptions{})
+	cindy, err := s.Create(ctx, "cindy", "cindy@exmaple.com", "cindy@exmaple.com", CreateUserOptions{})
 	require.NoError(t, err)
-	frank, err := s.Create(ctx, "frank", "frank@exmaple.com", CreateUserOptions{})
+	frank, err := s.Create(ctx, "frank", "frank@exmaple.com", "frank@exmaple.com", CreateUserOptions{})
 	require.NoError(t, err)
 	repo2, err := reposStore.Create(ctx, cindy.ID, CreateRepoOptions{Name: "repo2"})
 	require.NoError(t, err)
 
-	testUser, err := s.Create(ctx, "testUser", "testUser@exmaple.com", CreateUserOptions{})
+	testUser, err := s.Create(ctx, "testUser", "testUser@exmaple.com", "testUser@exmaple.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	// Mock watches, stars and follows
@@ -677,17 +680,17 @@ func usersDeleteByID(t *testing.T, ctx context.Context, s *UsersStore) {
 
 func usersDeleteInactivated(t *testing.T, ctx context.Context, s *UsersStore) {
 	// User with repository ownership should be skipped
-	alice, err := s.Create(ctx, "alice", "alice@exmaple.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@exmaple.com", "alice@exmaple.com", CreateUserOptions{})
 	require.NoError(t, err)
 	reposStore := newReposStore(s.db)
 	_, err = reposStore.Create(ctx, alice.ID, CreateRepoOptions{Name: "repo1"})
 	require.NoError(t, err)
 
 	// User with organization membership should be skipped
-	bob, err := s.Create(ctx, "bob", "bob@exmaple.com", CreateUserOptions{})
+	bob, err := s.Create(ctx, "bob", "bob@exmaple.com", "bob@exmaple.com", CreateUserOptions{})
 	require.NoError(t, err)
 	// TODO: Use Orgs.Create to replace SQL hack when the method is available.
-	org1, err := s.Create(ctx, "org1", "org1@example.com", CreateUserOptions{})
+	org1, err := s.Create(ctx, "org1", "org1@example.com", "org1@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 	err = s.db.Exec(
 		dbutil.Quote("UPDATE %s SET type = ? WHERE id IN (?)", "user"),
@@ -699,11 +702,11 @@ func usersDeleteInactivated(t *testing.T, ctx context.Context, s *UsersStore) {
 	require.NoError(t, err)
 
 	// User activated state should be skipped
-	_, err = s.Create(ctx, "cindy", "cindy@exmaple.com", CreateUserOptions{Activated: true})
+	_, err = s.Create(ctx, "cindy", "cindy@exmaple.com", "cindy@exmaple.com", CreateUserOptions{Activated: true})
 	require.NoError(t, err)
 
 	// User meant to be deleted
-	david, err := s.Create(ctx, "david", "david@exmaple.com", CreateUserOptions{})
+	david, err := s.Create(ctx, "david", "david@exmaple.com", "david@exmaple.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	tempSSHRootPath := filepath.Join(os.TempDir(), "usersDeleteInactivated-tempSSHRootPath")
@@ -730,7 +733,7 @@ func usersGetByEmail(t *testing.T, ctx context.Context, s *UsersStore) {
 
 	t.Run("ignore organization", func(t *testing.T) {
 		// TODO: Use Orgs.Create to replace SQL hack when the method is available.
-		org, err := s.Create(ctx, "gogs", "gogs@exmaple.com", CreateUserOptions{})
+		org, err := s.Create(ctx, "gogs", "gogs@exmaple.com", "gogs@exmaple.com", CreateUserOptions{})
 		require.NoError(t, err)
 
 		err = s.db.Model(&User{}).Where("id", org.ID).UpdateColumn("type", UserTypeOrganization).Error
@@ -742,7 +745,7 @@ func usersGetByEmail(t *testing.T, ctx context.Context, s *UsersStore) {
 	})
 
 	t.Run("by primary email", func(t *testing.T) {
-		alice, err := s.Create(ctx, "alice", "alice@exmaple.com", CreateUserOptions{})
+		alice, err := s.Create(ctx, "alice", "alice@exmaple.com", "alice@exmaple.com", CreateUserOptions{})
 		require.NoError(t, err)
 
 		_, err = s.GetByEmail(ctx, alice.Email)
@@ -760,7 +763,7 @@ func usersGetByEmail(t *testing.T, ctx context.Context, s *UsersStore) {
 	})
 
 	t.Run("by secondary email", func(t *testing.T) {
-		bob, err := s.Create(ctx, "bob", "bob@example.com", CreateUserOptions{})
+		bob, err := s.Create(ctx, "bob", "bob@example.com", "bob@example.com", CreateUserOptions{})
 		require.NoError(t, err)
 
 		// TODO: Use UserEmails.Create to replace SQL hack when the method is available.
@@ -783,7 +786,7 @@ func usersGetByEmail(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersGetByID(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@exmaple.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@exmaple.com", "alice@exmaple.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	user, err := s.GetByID(ctx, alice.ID)
@@ -796,7 +799,7 @@ func usersGetByID(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersGetByUsername(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@exmaple.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@exmaple.com", "alice@exmaple.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	user, err := s.GetByUsername(ctx, alice.Name)
@@ -809,7 +812,7 @@ func usersGetByUsername(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersGetByKeyID(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@exmaple.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@exmaple.com", "alice@exmaple.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	// TODO: Use PublicKeys.Create to replace SQL hack when the method is available.
@@ -834,11 +837,11 @@ func usersGetByKeyID(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersGetMailableEmailsByUsernames(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@exmaple.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@exmaple.com", "alice@exmaple.com", CreateUserOptions{})
 	require.NoError(t, err)
-	bob, err := s.Create(ctx, "bob", "bob@exmaple.com", CreateUserOptions{Activated: true})
+	bob, err := s.Create(ctx, "bob", "bob@exmaple.com", "bob@exmaple.com", CreateUserOptions{Activated: true})
 	require.NoError(t, err)
-	_, err = s.Create(ctx, "cindy", "cindy@exmaple.com", CreateUserOptions{Activated: true})
+	_, err = s.Create(ctx, "cindy", "cindy@exmaple.com", "cindy@exmaple.com", CreateUserOptions{Activated: true})
 	require.NoError(t, err)
 
 	got, err := s.GetMailableEmailsByUsernames(ctx, []string{alice.Name, bob.Name, "ignore-non-exist"})
@@ -848,7 +851,7 @@ func usersGetMailableEmailsByUsernames(t *testing.T, ctx context.Context, s *Use
 }
 
 func usersIsUsernameUsed(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -898,14 +901,14 @@ func usersIsUsernameUsed(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersList(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
-	bob, err := s.Create(ctx, "bob", "bob@example.com", CreateUserOptions{})
+	bob, err := s.Create(ctx, "bob", "bob@example.com", "bob@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	// Create an organization shouldn't count
 	// TODO: Use Orgs.Create to replace SQL hack when the method is available.
-	org1, err := s.Create(ctx, "org1", "org1@example.com", CreateUserOptions{})
+	org1, err := s.Create(ctx, "org1", "org1@example.com", "org1@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 	err = s.db.Exec(
 		dbutil.Quote("UPDATE %s SET type = ? WHERE id = ?", "user"),
@@ -931,16 +934,16 @@ func usersList(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersListFollowers(t *testing.T, ctx context.Context, s *UsersStore) {
-	john, err := s.Create(ctx, "john", "john@example.com", CreateUserOptions{})
+	john, err := s.Create(ctx, "john", "john@example.com", "john@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	got, err := s.ListFollowers(ctx, john.ID, 1, 1)
 	require.NoError(t, err)
 	assert.Empty(t, got)
 
-	alice, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
-	bob, err := s.Create(ctx, "bob", "bob@example.com", CreateUserOptions{})
+	bob, err := s.Create(ctx, "bob", "bob@example.com", "bob@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	err = s.Follow(ctx, alice.ID, john.ID)
@@ -962,16 +965,16 @@ func usersListFollowers(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersListFollowings(t *testing.T, ctx context.Context, s *UsersStore) {
-	john, err := s.Create(ctx, "john", "john@example.com", CreateUserOptions{})
+	john, err := s.Create(ctx, "john", "john@example.com", "john@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	got, err := s.ListFollowers(ctx, john.ID, 1, 1)
 	require.NoError(t, err)
 	assert.Empty(t, got)
 
-	alice, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
-	bob, err := s.Create(ctx, "bob", "bob@example.com", CreateUserOptions{})
+	bob, err := s.Create(ctx, "bob", "bob@example.com", "bob@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	err = s.Follow(ctx, john.ID, alice.ID)
@@ -993,9 +996,9 @@ func usersListFollowings(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersSearchByName(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{FullName: "Alice Jordan"})
+	alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{FullName: "Alice Jordan"})
 	require.NoError(t, err)
-	bob, err := s.Create(ctx, "bob", "bob@example.com", CreateUserOptions{FullName: "Bob Jordan"})
+	bob, err := s.Create(ctx, "bob", "bob@example.com", "bob@example.com", CreateUserOptions{FullName: "Bob Jordan"})
 	require.NoError(t, err)
 
 	t.Run("search for username alice", func(t *testing.T) {
@@ -1036,6 +1039,7 @@ func usersUpdate(t *testing.T, ctx context.Context, s *UsersStore) {
 		ctx,
 		"alice",
 		"alice@example.com",
+		"alice@example.com",
 		CreateUserOptions{
 			FullName:    "FullName",
 			Password:    oldPassword,
@@ -1070,6 +1074,7 @@ func usersUpdate(t *testing.T, ctx context.Context, s *UsersStore) {
 		bob, err := s.Create(
 			ctx,
 			"bob",
+			"bob@example.com",
 			"bob@example.com",
 			CreateUserOptions{
 				Activated: true,
@@ -1144,7 +1149,7 @@ func usersUpdate(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersUseCustomAvatar(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	avatar, err := public.Files.ReadFile("img/avatar_default.png")
@@ -1183,14 +1188,14 @@ func TestIsUsernameAllowed(t *testing.T) {
 
 func usersAddEmail(t *testing.T, ctx context.Context, s *UsersStore) {
 	t.Run("multiple users can add the same unverified email", func(t *testing.T) {
-		alice, err := s.Create(ctx, "alice", "unverified@example.com", CreateUserOptions{})
+		alice, err := s.Create(ctx, "alice", "unverified@example.com", "unverified@example.com", CreateUserOptions{})
 		require.NoError(t, err)
 		err = s.AddEmail(ctx, alice.ID+1, "unverified@example.com", false)
 		require.NoError(t, err)
 	})
 
 	t.Run("only one user can add the same verified email", func(t *testing.T) {
-		bob, err := s.Create(ctx, "bob", "verified@example.com", CreateUserOptions{Activated: true})
+		bob, err := s.Create(ctx, "bob", "verified@example.com", "verified@example.com", CreateUserOptions{Activated: true})
 		require.NoError(t, err)
 		got := s.AddEmail(ctx, bob.ID+1, "verified@example.com", true)
 		want := ErrEmailAlreadyUsed{args: errutil.Args{"email": "verified@example.com"}}
@@ -1232,7 +1237,7 @@ func usersGetEmail(t *testing.T, ctx context.Context, s *UsersStore) {
 
 func usersListEmails(t *testing.T, ctx context.Context, s *UsersStore) {
 	t.Run("list emails with primary email", func(t *testing.T) {
-		alice, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+		alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 		require.NoError(t, err)
 		err = s.AddEmail(ctx, alice.ID, "alice2@example.com", true)
 		require.NoError(t, err)
@@ -1250,7 +1255,7 @@ func usersListEmails(t *testing.T, ctx context.Context, s *UsersStore) {
 	})
 
 	t.Run("list emails without primary email", func(t *testing.T) {
-		bob, err := s.Create(ctx, "bob", "bob@example.com", CreateUserOptions{})
+		bob, err := s.Create(ctx, "bob", "bob@example.com", "bob@example.com", CreateUserOptions{})
 		require.NoError(t, err)
 		err = s.AddEmail(ctx, bob.ID, "bob2@example.com", false)
 		require.NoError(t, err)
@@ -1267,7 +1272,7 @@ func usersListEmails(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersMarkEmailActivated(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	err = s.AddEmail(ctx, alice.ID, "alice2@example.com", false)
@@ -1285,7 +1290,7 @@ func usersMarkEmailActivated(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersMarkEmailPrimary(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 	err = s.AddEmail(ctx, alice.ID, "alice2@example.com", false)
 	require.NoError(t, err)
@@ -1311,7 +1316,7 @@ func usersMarkEmailPrimary(t *testing.T, ctx context.Context, s *UsersStore) {
 }
 
 func usersDeleteEmail(t *testing.T, ctx context.Context, s *UsersStore) {
-	alice, err := s.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := s.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	err = s.AddEmail(ctx, alice.ID, "alice2@example.com", false)
@@ -1328,9 +1333,9 @@ func usersDeleteEmail(t *testing.T, ctx context.Context, s *UsersStore) {
 
 func usersFollow(t *testing.T, ctx context.Context, s *UsersStore) {
 	usersStore := newUsersStore(s.db)
-	alice, err := usersStore.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := usersStore.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
-	bob, err := usersStore.Create(ctx, "bob", "bob@example.com", CreateUserOptions{})
+	bob, err := usersStore.Create(ctx, "bob", "bob@example.com", "bob@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	err = s.Follow(ctx, alice.ID, bob.ID)
@@ -1351,9 +1356,9 @@ func usersFollow(t *testing.T, ctx context.Context, s *UsersStore) {
 
 func usersIsFollowing(t *testing.T, ctx context.Context, s *UsersStore) {
 	usersStore := newUsersStore(s.db)
-	alice, err := usersStore.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := usersStore.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
-	bob, err := usersStore.Create(ctx, "bob", "bob@example.com", CreateUserOptions{})
+	bob, err := usersStore.Create(ctx, "bob", "bob@example.com", "bob@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	got := s.IsFollowing(ctx, alice.ID, bob.ID)
@@ -1372,9 +1377,9 @@ func usersIsFollowing(t *testing.T, ctx context.Context, s *UsersStore) {
 
 func usersUnfollow(t *testing.T, ctx context.Context, s *UsersStore) {
 	usersStore := newUsersStore(s.db)
-	alice, err := usersStore.Create(ctx, "alice", "alice@example.com", CreateUserOptions{})
+	alice, err := usersStore.Create(ctx, "alice", "alice@example.com", "alice@example.com", CreateUserOptions{})
 	require.NoError(t, err)
-	bob, err := usersStore.Create(ctx, "bob", "bob@example.com", CreateUserOptions{})
+	bob, err := usersStore.Create(ctx, "bob", "bob@example.com", "bob@example.com", CreateUserOptions{})
 	require.NoError(t, err)
 
 	err = s.Follow(ctx, alice.ID, bob.ID)
