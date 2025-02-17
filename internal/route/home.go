@@ -52,6 +52,7 @@ func ExploreRepos(c *context.Context) {
 	c.Data["Title"] = c.Tr("explore")
 	c.Data["PageIsExplore"] = true
 	c.Data["PageIsExploreRepositories"] = true
+	c.Data["ExploreUser"] = !conf.Admin.DisableRegularExploreUser || (c.User != nil && c.User.IsActive && c.User.IsAdmin)
 
 	page := c.QueryInt("page")
 	if page <= 0 {
@@ -140,6 +141,7 @@ func ExploreUsers(c *context.Context) {
 	c.Data["Title"] = c.Tr("explore")
 	c.Data["PageIsExplore"] = true
 	c.Data["PageIsExploreUsers"] = true
+	c.Data["ExploreUser"] = !conf.Admin.DisableRegularExploreUser || (c.User != nil && c.User.IsActive && c.User.IsAdmin)
 
 	RenderUserSearch(c, &UserSearchOptions{
 		Type:     database.UserTypeIndividual,
@@ -155,6 +157,7 @@ func ExploreOrganizations(c *context.Context) {
 	c.Data["Title"] = c.Tr("explore")
 	c.Data["PageIsExplore"] = true
 	c.Data["PageIsExploreOrganizations"] = true
+	c.Data["ExploreUser"] = !conf.Admin.DisableRegularExploreUser || (c.User != nil && c.User.IsActive && c.User.IsAdmin)
 
 	RenderUserSearch(c, &UserSearchOptions{
 		Type: database.UserTypeOrganization,
