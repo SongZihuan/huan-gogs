@@ -1,6 +1,6 @@
 // Copyright 2020 The Gogs Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style
-// license that can be found in the LICENSE file.
+// license that can be found in the LICENSE.gogs file.
 
 package conf
 
@@ -157,7 +157,8 @@ var (
 
 	// Admin settings
 	Admin struct {
-		DisableRegularOrgCreation bool
+		DisableRegularOrgCreation bool `ini:"DISABLE_REGULAR_ORG_CREATION"`
+		DisableRegularExploreUser bool `ini:"DISABLE_REGULAR_EXPLORE_USER"`
 	}
 
 	// Cron tasks
@@ -260,6 +261,7 @@ var Auth AuthOpts
 
 type ServerOpts struct {
 	ExternalURL          string `ini:"EXTERNAL_URL"`
+	ProxyProto           bool   `ini:"PROXY_PROTO"`
 	Domain               string
 	Protocol             string
 	HTTPAddr             string `ini:"HTTP_ADDR"`
@@ -312,17 +314,19 @@ type SSHOpts struct {
 var SSH SSHOpts
 
 type RepositoryOpts struct {
-	Root                     string
-	ScriptType               string
-	ANSICharset              string `ini:"ANSI_CHARSET"`
-	ForcePrivate             bool
-	MaxCreationLimit         int
-	PreferredLicenses        []string
-	DisableHTTPGit           bool `ini:"DISABLE_HTTP_GIT"`
-	EnableLocalPathMigration bool
-	EnableRawFileRenderMode  bool
-	CommitsFetchConcurrency  int
-	DefaultBranch            string
+	Root                         string
+	ScriptType                   string
+	ANSICharset                  string `ini:"ANSI_CHARSET"`
+	ForcePrivate                 bool
+	AdminNotCreationLimit        bool `ini:"ADMIN_NOT_CREATION_LIMIT"`
+	OrganizationNotCreationLimit bool `ini:"ORGANIZATION_NOT_CREATION_LIMIT"`
+	MaxCreationLimit             int
+	PreferredLicenses            []string
+	DisableHTTPGit               bool `ini:"DISABLE_HTTP_GIT"`
+	EnableLocalPathMigration     bool
+	EnableRawFileRenderMode      bool
+	CommitsFetchConcurrency      int
+	DefaultBranch                string
 
 	// Repository editor settings
 	Editor struct {

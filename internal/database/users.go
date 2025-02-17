@@ -1,6 +1,6 @@
 // Copyright 2020 The Gogs Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style
-// license that can be found in the LICENSE file.
+// license that can be found in the LICENSE.gogs file.
 
 package database
 
@@ -1629,8 +1629,8 @@ func (u *User) APIFormat() *api.User { // TODO 待检查
 // maxNumRepos returns the maximum number of repositories that the user can have
 // direct ownership.
 func (u *User) maxNumRepos() int {
-	if u.IsActive && u.IsAdmin {
-		return -1
+	if !u.IsActive {
+		return 0
 	} else if u.MaxRepoCreation <= -1 {
 		return conf.Repository.MaxCreationLimit
 	}
@@ -1639,13 +1639,32 @@ func (u *User) maxNumRepos() int {
 
 // canCreateRepo returns true if the user can create a repository.
 func (u *User) canCreateRepo() bool {
-	return u.IsOrganization() || (u.IsActive && u.IsAdmin) || u.maxNumRepos() <= -1 || u.NumRepos < u.maxNumRepos()
+	if !u.IsActive {
+		return false
+	}
+
+	if conf.Repository.AdminNotCreationLimit && u.IsAdmin {
+		return true
+	}
+
+	if conf.Admin.DisableRegularOrgCreation && conf.Repository.OrganizationNotCreationLimit && u.IsOrganization() {
+		return true
+	}
+
+	return u.maxNumRepos() <= -1 || u.NumRepos < u.maxNumRepos()
 }
 
 // CanCreateOrganization returns true if user can create organizations.
 func (u *User) CanCreateOrganization() bool {
-	//return !conf.Admin.DisableRegularOrgCreation || u.IsAdmin
-	return u.IsAdmin // 确定只有Admin可以创建仓库
+	if !u.IsActive {
+		return false
+	}
+
+	if conf.Admin.DisableRegularOrgCreation {
+		return u.IsAdmin
+	}
+
+	return true
 }
 
 // CanEditGitHook returns true if user can edit Git hooks.

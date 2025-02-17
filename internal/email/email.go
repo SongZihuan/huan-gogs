@@ -1,6 +1,6 @@
 // Copyright 2016 The Gogs Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style
-// license that can be found in the LICENSE file.
+// license that can be found in the LICENSE.gogs file.
 
 package email
 
@@ -76,7 +76,7 @@ func render(tpl string, data map[string]any) (string, error) {
 }
 
 func SendTestMail(email string) error {
-	return gomail.Send(&Sender{}, NewMessage([]string{email}, "测试邮件", "Hello 👋, 欢迎访问宋子桓的代码平台！").Message)
+	return gomail.Send(&Sender{}, NewMessage([]string{email}, "测试邮件", "Hello 👋, 欢迎访问 Hun Gogs 的代码平台！").Message)
 }
 
 /*

@@ -1,6 +1,6 @@
 // Copyright 2014 The Gogs Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style
-// license that can be found in the LICENSE file.
+// license that can be found in the LICENSE.gogs file.
 
 package database
 
@@ -1024,15 +1024,15 @@ func prepareRepoCommit(repo *Repository, tmpDir, repoPath string, opts CreateRep
 		}
 	}
 
-	// LICENSE
+	// LICENSE.gogs
 	if len(opts.License) > 0 {
 		data, err = getRepoInitFile("license", opts.License)
 		if err != nil {
 			return fmt.Errorf("getRepoInitFile[%s]: %v", opts.License, err)
 		}
 
-		if err = os.WriteFile(filepath.Join(tmpDir, "LICENSE"), data, 0644); err != nil {
-			return fmt.Errorf("write LICENSE: %v", err)
+		if err = os.WriteFile(filepath.Join(tmpDir, "LICENSE.gogs"), data, 0644); err != nil {
+			return fmt.Errorf("write LICENSE.gogs: %v", err)
 		}
 	}
 

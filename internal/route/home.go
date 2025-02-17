@@ -1,6 +1,6 @@
 // Copyright 2014 The Gogs Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style
-// license that can be found in the LICENSE file.
+// license that can be found in the LICENSE.gogs file.
 
 package route
 
@@ -132,7 +132,7 @@ func RenderUserSearch(c *context.Context, opts *UserSearchOptions) {
 }
 
 func ExploreUsers(c *context.Context) {
-	if !c.IsLogged || c.User == nil || !c.User.IsActive || !c.User.IsAdmin {
+	if conf.Admin.DisableRegularExploreUser && (!c.IsLogged || c.User == nil || !c.User.IsActive || !c.User.IsAdmin) {
 		c.NotFound()
 		return
 	}
