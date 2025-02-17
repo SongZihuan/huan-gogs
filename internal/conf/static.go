@@ -221,12 +221,6 @@ var (
 		BasicAuthPassword string
 	}
 
-	// Other settings
-	Other struct {
-		ShowFooterBranding         bool
-		ShowFooterTemplateLoadTime bool
-	}
-
 	// Global setting
 	HasRobotsTxt bool
 )
