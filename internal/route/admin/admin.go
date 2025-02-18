@@ -195,6 +195,7 @@ func Config(c *context.Context) {
 	c.Data["Server"] = conf.Server
 	c.Data["SSH"] = conf.SSH
 	c.Data["Repository"] = conf.Repository
+	c.Data["Admin"] = conf.Admin
 	c.Data["Database"] = conf.Database
 	c.Data["Security"] = conf.Security
 	c.Data["Email"] = conf.Email
