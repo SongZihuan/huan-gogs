@@ -65,7 +65,7 @@ func NewMessageFrom(to []string, from, subject, htmlBody string) *Message {
 
 // NewMessage creates new mail message object with default From header.
 func NewMessage(to []string, subject, body string) *Message {
-	return NewMessageFrom(to, conf.Email.From, subject, body)
+	return NewMessageFrom(to, conf.Email.FromEmail.String(), subject, body)
 }
 
 type loginAuth struct {

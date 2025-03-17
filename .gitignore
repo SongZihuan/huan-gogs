@@ -17,3 +17,4 @@ output*
 .task
 .envrc
 go-remote.sh
+testhome

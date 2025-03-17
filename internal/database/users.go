@@ -387,7 +387,7 @@ func (s *UsersStore) Create(ctx context.Context, username, email string, opts Cr
 	user.Password = userutil.EncodePassword(user.Password, user.Salt)
 
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		err := s.db.WithContext(ctx).Create(user).Error
+		err := tx.Create(user).Error
 		if err == nil {
 			return err
 		}
@@ -400,7 +400,7 @@ func (s *UsersStore) Create(ctx context.Context, username, email string, opts Cr
 		return nil
 	})
 
-	return user, s.db.WithContext(ctx).Create(user).Error
+	return user, err
 }
 
 // DeleteCustomAvatar deletes the current user custom avatar and falls back to

@@ -213,7 +213,7 @@ func Init(customConf string) error {
 		if err != nil {
 			return errors.Wrapf(err, "parse mail address %q", Email.From)
 		}
-		Email.FromEmail = parsed.Address
+		Email.FromEmail = parsed
 	}
 
 	// ***********************************

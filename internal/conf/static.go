@@ -5,6 +5,7 @@
 package conf
 
 import (
+	"net/mail"
 	"net/url"
 	"os"
 	"time"
@@ -68,7 +69,7 @@ var (
 		AddPlainTextAlt bool
 
 		// Derived from other static values
-		FromEmail string `ini:"-"` // Parsed email address of From without person's name.
+		FromEmail *mail.Address `ini:"-"` // Parsed email address of From without person's name.
 	}
 
 	// User settings
