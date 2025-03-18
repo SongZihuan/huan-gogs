@@ -259,7 +259,7 @@ func Home(c *context.Context) {
 		var err error
 		c.Repo.CommitsCount, err = c.Repo.Commit.CommitsCount()
 		if err != nil {
-			c.Error(err, "count commits")
+			c.Wait(err, "The Git repository has not been loaded yet, please refresh and try again later!", true)
 			return
 		}
 		c.Data["CommitsCount"] = c.Repo.CommitsCount

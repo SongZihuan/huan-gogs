@@ -1637,8 +1637,8 @@ func (u *User) maxNumRepos() int {
 	return u.MaxRepoCreation
 }
 
-// canCreateRepo returns true if the user can create a repository.
-func (u *User) canCreateRepo() bool {
+// CanCreateRepo returns true if the user can create a repository.
+func (u *User) CanCreateRepo() bool {
 	if !u.IsActive {
 		return false
 	}

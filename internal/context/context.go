@@ -169,6 +169,22 @@ func (c *Context) RenderWithErr(msg, tpl string, f any) {
 	c.HTML(http.StatusOK, tpl)
 }
 
+func (c *Context) Wait(err error, msg string, refresh bool) {
+	c.Flash.ErrorMsg = msg
+	c.Data["Refresh"] = refresh
+	c.Data["Flash"] = c.Flash.ErrorMsg
+
+	if err != nil {
+		log.ErrorDepth(4, "%s: %v", msg, err)
+		c.Data["ErrorMsg"] = err.Error()
+	} else {
+		c.Data["ErrorMsg"] = ""
+	}
+
+	c.Title("status.page_not_found")
+	c.HTML(http.StatusOK, "status/wait")
+}
+
 // NotFound renders the 404 page.
 func (c *Context) NotFound() {
 	c.Title("status.page_not_found")
@@ -269,6 +285,9 @@ func Contexter(store Store) macaron.Handler {
 			c.Data["LoggedUserID"] = c.User.ID
 			c.Data["LoggedUserName"] = c.User.Name
 			c.Data["IsAdmin"] = c.User.IsAdmin
+			c.Data["IsCanCreate"] = c.User.CanCreateRepo() || c.User.CanCreateOrganization()
+			c.Data["IsCanCreateRepo"] = c.User.CanCreateRepo()
+			c.Data["IsCanCreateOrg"] = c.User.CanCreateOrganization()
 		} else {
 			c.Data["LoggedUserID"] = 0
 			c.Data["LoggedUserName"] = ""
