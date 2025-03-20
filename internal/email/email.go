@@ -6,6 +6,7 @@ package email
 
 import (
 	"fmt"
+	"gogs.io/gogs/internal/tool"
 	"html/template"
 	"path/filepath"
 	"sync"
@@ -76,7 +77,7 @@ func render(tpl string, data map[string]any) (string, error) {
 }
 
 func SendTestMail(email string) error {
-	return gomail.Send(&Sender{}, NewMessage([]string{email}, "测试邮件", "Hello 👋, 欢迎访问 Hun Gogs 的代码平台！").Message)
+	return gomail.Send(&Sender{}, NewMessage([]string{email}, "测试邮件", "Hello 👋, 欢迎访问 Huan Gogs 的代码平台！").Message)
 }
 
 /*
@@ -88,7 +89,6 @@ type User interface {
 	DisplayName() string
 	Email() string
 	PublicEmail() string
-	GenerateEmailActivateCode(string) string
 }
 
 type Repository interface {
@@ -123,19 +123,37 @@ func SendUserMail(_ *macaron.Context, u User, tpl, code, subject, info string) {
 }
 
 func SendActivateAccountMail(c *macaron.Context, u User) {
-	SendUserMail(c, u, MAIL_AUTH_ACTIVATE, u.GenerateEmailActivateCode(u.Email()), c.Tr("mail.activate_account"), "activate account")
+	token, err := tool.NewClaims(u.ID(), u.Email(), tool.SubjectActiveAccount).ToToken()
+	if err != nil {
+		log.Error("Create token error: %s", err.Error())
+		return
+	}
+
+	SendUserMail(c, u, MAIL_AUTH_ACTIVATE, token, c.Tr("mail.activate_account"), "activate account")
 }
 
 func SendResetPasswordMail(c *macaron.Context, u User) {
-	SendUserMail(c, u, MAIL_AUTH_RESET_PASSWORD, u.GenerateEmailActivateCode(u.Email()), c.Tr("mail.reset_password"), "reset password")
+	token, err := tool.NewClaims(u.ID(), u.Email(), tool.SubjectForgetPasswd).ToToken()
+	if err != nil {
+		log.Error("Create token error: %s", err.Error())
+		return
+	}
+
+	SendUserMail(c, u, MAIL_AUTH_RESET_PASSWORD, token, c.Tr("mail.reset_password"), "reset password")
 }
 
 // SendActivateAccountMail sends confirmation email.
 func SendActivateEmailMail(c *macaron.Context, u User, email string) {
+	token, err := tool.NewClaims(u.ID(), email, tool.SubjectActiveEmail).ToToken()
+	if err != nil {
+		log.Error("Create token error: %s", err.Error())
+		return
+	}
+
 	data := map[string]any{
 		"Username":        u.DisplayName(),
 		"ActiveCodeLives": conf.Auth.ActivateCodeLives / 60,
-		"Code":            u.GenerateEmailActivateCode(email),
+		"Code":            token,
 		"Email":           email,
 	}
 	body, err := render(MAIL_AUTH_ACTIVATE_EMAIL, data)

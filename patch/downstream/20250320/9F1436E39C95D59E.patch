@@ -1,0 +1,630 @@
+Subject: [PATCH] 更新用户激活码生成逻辑
+---
+Index: go.mod
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/go.mod b/go.mod
+--- a/go.mod	(revision 5cc990871b6089776ed087dd4bd37e3ef91a0d1a)
++++ b/go.mod	(revision 193cebe00479c3552913912b04f045f5bdc22b2a)
+@@ -73,6 +73,7 @@
+ 	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
+ 	github.com/davecgh/go-spew v1.1.1 // indirect
+ 	github.com/denisenkom/go-mssqldb v0.12.0 // indirect
++	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+ 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+ 	github.com/djherbis/buffer v1.2.0 // indirect
+ 	github.com/djherbis/nio/v3 v3.0.1 // indirect
+Index: go.sum
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/go.sum b/go.sum
+--- a/go.sum	(revision 5cc990871b6089776ed087dd4bd37e3ef91a0d1a)
++++ b/go.sum	(revision 193cebe00479c3552913912b04f045f5bdc22b2a)
+@@ -58,6 +58,8 @@
+ github.com/denisenkom/go-mssqldb v0.12.0/go.mod h1:iiK0YP1ZeepvmBQk/QpLEhhTNJgfzrpArPY/aFvc9yU=
+ github.com/derision-test/go-mockgen v1.3.7 h1:b/DXAXL2FkaRPpnbYK3ODdZzklmJAwox0tkc6yyXx74=
+ github.com/derision-test/go-mockgen v1.3.7/go.mod h1:/TXUePlhtHmDDCaDAi/a4g6xOHqMDz3Wf0r2NPGskB4=
++github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
++github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
+ github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/rVNCu3HqELle0jiPLLBs70cWOduZpkS1E78=
+ github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
+ github.com/djherbis/buffer v1.1.0/go.mod h1:VwN8VdFkMY0DCALdY8o00d3IZ6Amz/UNVMWcSaJT44o=
+Index: internal/database/issue_mail.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/database/issue_mail.go b/internal/database/issue_mail.go
+--- a/internal/database/issue_mail.go	(revision 5cc990871b6089776ed087dd4bd37e3ef91a0d1a)
++++ b/internal/database/issue_mail.go	(revision 193cebe00479c3552913912b04f045f5bdc22b2a)
+@@ -15,7 +15,6 @@
+ 	"gogs.io/gogs/internal/conf"
+ 	"gogs.io/gogs/internal/email"
+ 	"gogs.io/gogs/internal/markup"
+-	"gogs.io/gogs/internal/userutil"
+ )
+ 
+ func (issue *Issue) MailSubject() string {
+@@ -43,16 +42,6 @@
+ 	return this.user.PublicEmail
+ }
+ 
+-func (this mailerUser) GenerateEmailActivateCode(email string) string {
+-	return userutil.GenerateActivateCode(
+-		this.user.ID,
+-		email,
+-		this.user.Name,
+-		this.user.Password,
+-		this.user.Rands,
+-	)
+-}
+-
+ func NewMailerUser(u *User) email.User {
+ 	return mailerUser{u}
+ }
+Index: internal/database/users.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/database/users.go b/internal/database/users.go
+--- a/internal/database/users.go	(revision 5cc990871b6089776ed087dd4bd37e3ef91a0d1a)
++++ b/internal/database/users.go	(revision 193cebe00479c3552913912b04f045f5bdc22b2a)
+@@ -1149,6 +1149,7 @@
+ 
+ 		user.UpdatedUnix = s.db.NowFunc().Unix()
+ 		user.Rands = rands
++		user.IsActive = true
+ 
+ 		err = tx.Save(user).Error
+ 		if err != nil {
+Index: internal/email/email.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/email/email.go b/internal/email/email.go
+--- a/internal/email/email.go	(revision 5cc990871b6089776ed087dd4bd37e3ef91a0d1a)
++++ b/internal/email/email.go	(revision 193cebe00479c3552913912b04f045f5bdc22b2a)
+@@ -6,6 +6,7 @@
+ 
+ import (
+ 	"fmt"
++	"gogs.io/gogs/internal/tool"
+ 	"html/template"
+ 	"path/filepath"
+ 	"sync"
+@@ -88,7 +89,6 @@
+ 	DisplayName() string
+ 	Email() string
+ 	PublicEmail() string
+-	GenerateEmailActivateCode(string) string
+ }
+ 
+ type Repository interface {
+@@ -123,19 +123,37 @@
+ }
+ 
+ func SendActivateAccountMail(c *macaron.Context, u User) {
+-	SendUserMail(c, u, MAIL_AUTH_ACTIVATE, u.GenerateEmailActivateCode(u.Email()), c.Tr("mail.activate_account"), "activate account")
++	token, err := tool.NewClaims(u.ID(), u.Email(), tool.SubjectActiveAccount).ToToken()
++	if err != nil {
++		log.Error("Create token error: %s", err.Error())
++		return
++	}
++
++	SendUserMail(c, u, MAIL_AUTH_ACTIVATE, token, c.Tr("mail.activate_account"), "activate account")
+ }
+ 
+ func SendResetPasswordMail(c *macaron.Context, u User) {
+-	SendUserMail(c, u, MAIL_AUTH_RESET_PASSWORD, u.GenerateEmailActivateCode(u.Email()), c.Tr("mail.reset_password"), "reset password")
++	token, err := tool.NewClaims(u.ID(), u.Email(), tool.SubjectForgetPasswd).ToToken()
++	if err != nil {
++		log.Error("Create token error: %s", err.Error())
++		return
++	}
++
++	SendUserMail(c, u, MAIL_AUTH_RESET_PASSWORD, token, c.Tr("mail.reset_password"), "reset password")
+ }
+ 
+ // SendActivateAccountMail sends confirmation email.
+ func SendActivateEmailMail(c *macaron.Context, u User, email string) {
++	token, err := tool.NewClaims(u.ID(), email, tool.SubjectActiveEmail).ToToken()
++	if err != nil {
++		log.Error("Create token error: %s", err.Error())
++		return
++	}
++
+ 	data := map[string]any{
+ 		"Username":        u.DisplayName(),
+ 		"ActiveCodeLives": conf.Auth.ActivateCodeLives / 60,
+-		"Code":            u.GenerateEmailActivateCode(email),
++		"Code":            token,
+ 		"Email":           email,
+ 	}
+ 	body, err := render(MAIL_AUTH_ACTIVATE_EMAIL, data)
+Index: internal/route/user/auth.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/route/user/auth.go b/internal/route/user/auth.go
+--- a/internal/route/user/auth.go	(revision 5cc990871b6089776ed087dd4bd37e3ef91a0d1a)
++++ b/internal/route/user/auth.go	(revision 193cebe00479c3552913912b04f045f5bdc22b2a)
+@@ -6,13 +6,10 @@
+ 
+ import (
+ 	gocontext "context"
+-	"encoding/hex"
+ 	"fmt"
++	"github.com/go-macaron/captcha"
+ 	"net/http"
+ 	"net/url"
+-	"strings"
+-
+-	"github.com/go-macaron/captcha"
+ 	log "unknwon.dev/clog/v2"
+ 
+ 	"gogs.io/gogs/internal/auth"
+@@ -395,66 +392,56 @@
+ 	c.RedirectSubpath("/user/login")
+ }
+ 
+-// parseUserFromCode returns user by username encoded in code.
+-// It returns nil if code or username is invalid.
+-func parseUserFromCode(code string) (user *database.User) {
+-	if len(code) <= tool.TIME_LIMIT_CODE_LENGTH {
++// verify active code when active account
++func verifyUserActiveCode(code string) (user *database.User) {
++	data, err := tool.ParseToken(code)
++	if err != nil {
++		fmt.Println("TAG B", err.Error())
+ 		return nil
+-	}
+-
+-	// Use tail hex username to query user
+-	hexStr := code[tool.TIME_LIMIT_CODE_LENGTH:]
+-	if b, err := hex.DecodeString(hexStr); err == nil {
+-		if user, err = database.Handle.Users().GetByUsername(gocontext.TODO(), string(b)); user != nil {
+-			return user
+-		} else if !database.IsErrUserNotExist(err) {
+-			log.Error("Failed to get user by name %q: %v", string(b), err)
+-		}
+-	}
+-
+-	return nil
+-}
++	} else if data.Valid() != nil {
++		fmt.Println("TAG C", data.Valid())
++		return nil
++	}
+ 
+-// verify active code when active account
+-func verifyUserActiveCode(code string) (user *database.User) {
+-	minutes := conf.Auth.ActivateCodeLives
+-
+-	if user = parseUserFromCode(code); user != nil {
+-		// time limit code
+-		prefix := code[:tool.TIME_LIMIT_CODE_LENGTH]
+-		data := fmt.Sprintf("%d%s%s%s%s", user.ID, user.Email, strings.ToLower(user.Name), user.Password, user.Rands)
+-
+-		if tool.VerifyTimeLimitCode(data, minutes, prefix) {
+-			return user
++	if user, err = database.Handle.Users().GetByID(gocontext.TODO(), data.Id); err != nil {
++		if !database.IsErrUserNotExist(err) {
++			log.Error("Failed to get user by id %d: %v", data.Id, err)
+ 		}
+-	}
+-	return nil
+-}
++		fmt.Println("TAG D", err.Error())
++		return nil
++	}
+ 
++	return user
++}
++
+ // verify active code when active account
+ func verifyActiveEmailCode(code, email string) *database.EmailAddress {
+-	minutes := conf.Auth.ActivateCodeLives
++	data, err := tool.ParseToken(code)
++	if err != nil {
++		return nil
++	} else if data.Valid() != nil {
++		return nil
++	}
+ 
+-	if user := parseUserFromCode(code); user != nil {
+-		// time limit code
+-		prefix := code[:tool.TIME_LIMIT_CODE_LENGTH]
+-		data := fmt.Sprintf("%d%s%s%s%s", user.ID, email, strings.ToLower(user.Name), user.Password, user.Rands)
++	user, err := database.Handle.Users().GetByID(gocontext.TODO(), data.Id)
++	if err != nil || user == nil {
++		log.Error("Failed to get user by id %d: %v", data.Id, err)
++		return nil
++	}
+ 
+-		if tool.VerifyTimeLimitCode(data, minutes, prefix) {
+-			emailAddress, err := database.Handle.Users().GetEmail(gocontext.TODO(), user.ID, email, false)
+-			if err == nil {
+-				return emailAddress
+-			}
+-		}
+-	}
+-	return nil
+-}
++	emailAddress, err := database.Handle.Users().GetEmail(gocontext.TODO(), user.ID, email, false)
++	if err != nil {
++		return nil
++	}
+ 
++	return emailAddress
++}
++
+ func Activate(c *context.Context) {
+ 	code := c.Query("code")
+ 	if code == "" {
+ 		c.Data["IsActivatePage"] = true
+-		if c.User.IsActive {
++		if c.User == nil || c.User.IsActive {
+ 			c.NotFound()
+ 			return
+ 		}
+@@ -477,6 +464,8 @@
+ 		return
+ 	}
+ 
++	fmt.Println("TAG A")
++
+ 	// Verify code.
+ 	if user := verifyUserActiveCode(code); user != nil {
+ 		err := database.Handle.Users().Active(
+@@ -485,6 +474,7 @@
+ 		)
+ 		if err != nil {
+ 			c.Error(err, "update user")
++			fmt.Println("TAG F", err.Error())
+ 			return
+ 		}
+ 
+@@ -602,25 +592,31 @@
+ 	}
+ 	c.Data["Code"] = code
+ 
+-	if u := verifyUserActiveCode(code); u != nil {
+-		// Validate password length.
+-		password := c.Query("password")
+-		if len(password) < 6 {
+-			c.Data["IsResetForm"] = true
+-			c.Data["Err_Password"] = true
+-			c.RenderWithErr(c.Tr("auth.password_too_short"), RESET_PASSWORD, nil)
+-			return
+-		}
++	data, err := tool.ParseToken(code)
++	if err == nil && data.Valid() == nil {
++		user, err := database.Handle.Users().GetByID(gocontext.TODO(), data.Id)
++		if err == nil && user != nil {
++			// Validate password length.
++			password := c.Query("password")
++			if len(password) < 6 {
++				c.Data["IsResetForm"] = true
++				c.Data["Err_Password"] = true
++				c.RenderWithErr(c.Tr("auth.password_too_short"), RESET_PASSWORD, nil)
++				return
++			}
+ 
+-		err := database.Handle.Users().Update(c.Req.Context(), u.ID, database.UpdateUserOptions{Password: &password})
+-		if err != nil {
+-			c.Error(err, "update user")
+-			return
+-		}
++			err := database.Handle.Users().Update(c.Req.Context(), user.ID, database.UpdateUserOptions{Password: &password})
++			if err != nil {
++				c.Error(err, "update user")
++				return
++			}
+ 
+-		log.Trace("User password reset: %s", u.Name)
+-		c.RedirectSubpath("/user/login")
+-		return
++			log.Trace("User password reset: %s", user.Name)
++			c.RedirectSubpath("/user/login")
++			return
++		} else if user == nil {
++			log.Error("Failed to get user by id %d: %v", data.Id, err)
++		}
+ 	}
+ 
+ 	c.Data["IsResetFailed"] = true
+Index: internal/tool/jwt.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/tool/jwt.go b/internal/tool/jwt.go
+new file mode 100644
+--- /dev/null	(revision 193cebe00479c3552913912b04f045f5bdc22b2a)
++++ b/internal/tool/jwt.go	(revision 193cebe00479c3552913912b04f045f5bdc22b2a)
+@@ -0,0 +1,102 @@
++package tool
++
++import (
++	"crypto/rand"
++	"fmt"
++	"github.com/dgrijalva/jwt-go"
++	"gogs.io/gogs/internal/conf"
++	"time"
++)
++
++type Subject int
++
++const (
++	SubjectActiveAccount Subject = 1
++	SubjectActiveEmail   Subject = 2
++	SubjectForgetPasswd  Subject = 3
++)
++
++var secretKey = make([]byte, 32)
++
++func init() {
++	if _, err := rand.Read(secretKey); err != nil {
++		panic(err)
++	}
++}
++
++type Claims struct {
++	Audience  string  `json:"aud,omitempty"`
++	ExpiresAt int64   `json:"exp,omitempty"`
++	Id        int64   `json:"jti,omitempty"`
++	Email     string  `json:"email,omitempty"`
++	IssuedAt  int64   `json:"iat,omitempty"`
++	Issuer    string  `json:"iss,omitempty"`
++	NotBefore int64   `json:"nbf,omitempty"`
++	Subject   Subject `json:"sub,omitempty"`
++}
++
++func (c *Claims) Valid() error {
++	now := time.Now()
++
++	if now.After(time.Unix(c.ExpiresAt, 0)) {
++		return fmt.Errorf("error")
++	}
++
++	if now.Before(time.Unix(c.NotBefore, 0)) {
++		return fmt.Errorf("error")
++	}
++
++	if now.Before(time.Unix(c.IssuedAt, 0)) {
++		return fmt.Errorf("error")
++	}
++
++	if c.Audience != c.Email {
++		return fmt.Errorf("error")
++	}
++
++	return nil
++}
++
++func NewClaims(id int64, email string, subject Subject) *Claims {
++	now := time.Now()
++	return &Claims{
++		Audience:  email,
++		ExpiresAt: now.Add(time.Duration(conf.Auth.ActivateCodeLives) * time.Minute).Unix(),
++		Id:        id,
++		Email:     email,
++		IssuedAt:  now.Unix(),
++		Issuer:    conf.Server.ExternalURL,
++		NotBefore: now.Unix(),
++		Subject:   subject,
++	}
++}
++
++func (c *Claims) ToToken() (string, error) {
++	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
++	//使用指定的secret签名并获得完成的编码后的字符串token
++
++	return token.SignedString(secretKey)
++}
++
++func ParseToken(t string) (*Claims, error) {
++	//解析token
++	token, err := jwt.ParseWithClaims(t, &Claims{}, func(token *jwt.Token) (i interface{}, err error) {
++		return secretKey, nil
++	})
++	if err != nil {
++		return nil, err
++	}
++	if claims, ok := token.Claims.(*Claims); ok && claims != nil && token.Valid {
++		return claims, nil
++	} else if err := claims.Valid(); err != nil {
++		return nil, err
++	}
++
++	if claims, ok := token.Claims.(*Claims); ok && claims != nil && token.Valid {
++		if err := claims.Valid(); err != nil {
++			return nil, err
++		}
++		return claims, nil
++	}
++	return nil, fmt.Errorf("invalid token")
++}
+Index: internal/tool/tool.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/tool/tool.go b/internal/tool/tool.go
+--- a/internal/tool/tool.go	(revision 5cc990871b6089776ed087dd4bd37e3ef91a0d1a)
++++ b/internal/tool/tool.go	(revision 193cebe00479c3552913912b04f045f5bdc22b2a)
+@@ -5,9 +5,7 @@
+ package tool
+ 
+ import (
+-	"crypto/sha1"
+ 	"encoding/base64"
+-	"encoding/hex"
+ 	"fmt"
+ 	"html/template"
+ 	"strings"
+@@ -62,66 +60,6 @@
+ 	return auth[0], auth[1], nil
+ }
+ 
+-// verify time limit code
+-func VerifyTimeLimitCode(data string, minutes int, code string) bool {
+-	if len(code) <= 18 {
+-		return false
+-	}
+-
+-	// split code
+-	start := code[:12]
+-	lives := code[12:18]
+-	if d, err := com.StrTo(lives).Int(); err == nil {
+-		minutes = d
+-	}
+-
+-	// right active code
+-	retCode := CreateTimeLimitCode(data, minutes, start)
+-	if retCode == code && minutes > 0 {
+-		// check time is expired or not
+-		before, _ := time.ParseInLocation("200601021504", start, time.Local)
+-		now := time.Now()
+-		if before.Add(time.Minute*time.Duration(minutes)).Unix() > now.Unix() {
+-			return true
+-		}
+-	}
+-
+-	return false
+-}
+-
+-const TIME_LIMIT_CODE_LENGTH = 12 + 6 + 40
+-
+-// CreateTimeLimitCode generates a time limit code based on given input data.
+-// Format: 12 length date time string + 6 minutes string + 40 sha1 encoded string
+-func CreateTimeLimitCode(data string, minutes int, startInf any) string {
+-	format := "200601021504"
+-
+-	var start, end time.Time
+-	var startStr, endStr string
+-
+-	if startInf == nil {
+-		// Use now time create code
+-		start = time.Now()
+-		startStr = start.Format(format)
+-	} else {
+-		// use start string create code
+-		startStr = startInf.(string)
+-		start, _ = time.ParseInLocation(format, startStr, time.Local)
+-		startStr = start.Format(format)
+-	}
+-
+-	end = start.Add(time.Minute * time.Duration(minutes))
+-	endStr = end.Format(format)
+-
+-	// create sha1 encode string
+-	sh := sha1.New()
+-	_, _ = sh.Write([]byte(data + conf.Security.SecretKey + startStr + endStr + com.ToStr(minutes)))
+-	encoded := hex.EncodeToString(sh.Sum(nil))
+-
+-	code := fmt.Sprintf("%s%06d%s", startStr, minutes, encoded)
+-	return code
+-}
+-
+ // HashEmail hashes email address to MD5 string.
+ // https://en.gravatar.com/site/implement/hash/
+ func HashEmail(email string) string {
+Index: internal/userutil/userutil.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/userutil/userutil.go b/internal/userutil/userutil.go
+--- a/internal/userutil/userutil.go	(revision 5cc990871b6089776ed087dd4bd37e3ef91a0d1a)
++++ b/internal/userutil/userutil.go	(revision 193cebe00479c3552913912b04f045f5bdc22b2a)
+@@ -8,23 +8,19 @@
+ 	"bytes"
+ 	"crypto/sha256"
+ 	"crypto/subtle"
+-	"encoding/hex"
+ 	"fmt"
++	"github.com/nfnt/resize"
++	"github.com/pkg/errors"
++	"golang.org/x/crypto/pbkdf2"
+ 	"image"
+ 	"image/png"
+ 	"os"
+ 	"path/filepath"
+ 	"strconv"
+-	"strings"
+-
+-	"github.com/nfnt/resize"
+-	"github.com/pkg/errors"
+-	"golang.org/x/crypto/pbkdf2"
+ 
+ 	"gogs.io/gogs/internal/avatar"
+ 	"gogs.io/gogs/internal/conf"
+ 	"gogs.io/gogs/internal/strutil"
+-	"gogs.io/gogs/internal/tool"
+ )
+ 
+ // DashboardURLPath returns the URL path to the user or organization dashboard.
+@@ -35,20 +31,6 @@
+ 	return conf.Server.Subpath + "/"
+ }
+ 
+-// GenerateActivateCode generates an activate code based on user information and
+-// the given email.
+-func GenerateActivateCode(userID int64, email, name, password, rands string) string {
+-	code := tool.CreateTimeLimitCode(
+-		fmt.Sprintf("%d%s%s%s%s", userID, email, strings.ToLower(name), password, rands),
+-		conf.Auth.ActivateCodeLives,
+-		nil,
+-	)
+-
+-	// Add tailing hex username
+-	code += hex.EncodeToString([]byte(strings.ToLower(name)))
+-	return code
+-}
+-
+ // CustomAvatarPath returns the absolute path of the user custom avatar file.
+ func CustomAvatarPath(userID int64) string {
+ 	return filepath.Join(conf.Picture.AvatarUploadPath, strconv.FormatInt(userID, 10))
+Index: internal/userutil/userutil_test.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/userutil/userutil_test.go b/internal/userutil/userutil_test.go
+--- a/internal/userutil/userutil_test.go	(revision 5cc990871b6089776ed087dd4bd37e3ef91a0d1a)
++++ b/internal/userutil/userutil_test.go	(revision 193cebe00479c3552913912b04f045f5bdc22b2a)
+@@ -14,7 +14,6 @@
+ 
+ 	"gogs.io/gogs/internal/conf"
+ 	"gogs.io/gogs/internal/osutil"
+-	"gogs.io/gogs/internal/tool"
+ 	"gogs.io/gogs/public"
+ )
+ 
+@@ -32,18 +31,6 @@
+ 	})
+ }
+ 
+-func TestGenerateActivateCode(t *testing.T) {
+-	conf.SetMockAuth(t,
+-		conf.AuthOpts{
+-			ActivateCodeLives: 10,
+-		},
+-	)
+-
+-	code := GenerateActivateCode(1, "alice@example.com", "Alice", "123456", "rands")
+-	got := tool.VerifyTimeLimitCode("1alice@example.comalice123456rands", conf.Auth.ActivateCodeLives, code[:tool.TIME_LIMIT_CODE_LENGTH])
+-	assert.True(t, got)
+-}
+-
+ func TestCustomAvatarPath(t *testing.T) {
+ 	if runtime.GOOS == "windows" {
+ 		t.Skip("Skipping testing on Windows")

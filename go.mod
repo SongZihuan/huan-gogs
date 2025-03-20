@@ -5,6 +5,7 @@ go 1.23.4
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/derision-test/go-mockgen v1.3.7
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/editorconfig/editorconfig-core-go/v2 v2.6.2
 	github.com/go-ldap/ldap/v3 v3.4.10
 	github.com/go-macaron/binding v1.2.0
