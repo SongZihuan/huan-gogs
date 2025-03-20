@@ -1,6 +1,6 @@
 // Copyright 2020 The Gogs Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style
-// license that can be found in the LICENSE.gogs file.
+// license that can be found in the LICENSE and LICENSE.gogs file.
 
 package pam
 
