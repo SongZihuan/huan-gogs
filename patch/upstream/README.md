@@ -2,7 +2,7 @@
 
 ### 日期 2025年03月20日
 
-### 补丁 [40EE6750AED2E6EA.patch](40EE6750AED2E6EA.patch)
+#### 补丁 [40EE6750AED2E6EA.patch](20250320/40EE6750AED2E6EA.patch)
 
 上游（[Gogs](https://github.com/SongZihuan/gogs)）补丁：[#3a952bd2](https://github.com/SongZihuan/gogs/commit/3a952bd248cd2877edbeca3e6fed0e7ce33ce32d) -> [#4acaaac8](https://github.com/SongZihuan/gogs/commit/4acaaac85aca427771030ab2e9a1465e9517ba1d)
 

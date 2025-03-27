@@ -1,0 +1,42 @@
+Subject: [PATCH] 更新 SMTP 认证错误处理逻辑
+---
+Index: internal/auth/smtp/provider.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/auth/smtp/provider.go b/internal/auth/smtp/provider.go
+--- a/internal/auth/smtp/provider.go	(revision 2c11c2ff9b24f536e84add7d415c7f601453833f)
++++ b/internal/auth/smtp/provider.go	(revision b9cf06c505c122da0f63a7c0be5ac3f27f8f6e75)
+@@ -66,8 +66,9 @@
+ 
+ 		// Check standard error format first, then fallback to the worse case.
+ 		tperr, ok := err.(*textproto.Error)
+-		if (ok && tperr.Code == 535) ||
+-			strings.Contains(err.Error(), "Username and Password not accepted") {
++		if (ok && (tperr.Code == 526 || tperr.Code == 530 || tperr.Code == 534 || tperr.Code == 535 || tperr.Code == 536)) ||
++			strings.Contains(err.Error(), "Username and Password not accepted") ||
++			strings.Contains(err.Error(), "Authentication failure") {
+ 			return nil, auth.ErrBadCredentials{Args: map[string]any{"login": login}}
+ 		}
+ 		return nil, err
+Index: internal/route/user/auth.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/route/user/auth.go b/internal/route/user/auth.go
+--- a/internal/route/user/auth.go	(revision 2c11c2ff9b24f536e84add7d415c7f601453833f)
++++ b/internal/route/user/auth.go	(revision b9cf06c505c122da0f63a7c0be5ac3f27f8f6e75)
+@@ -171,9 +171,9 @@
+ 		case database.IsErrLoginSourceMismatch(err):
+ 			c.FormErr("LoginSource")
+ 			c.RenderWithErr(c.Tr("form.auth_source_mismatch"), LOGIN, &f)
+-
+ 		default:
+-			c.Error(err, "authenticate user")
++			c.FormErr("UserName", "Password", "LoginSource")
++			c.RenderWithErr(err.Error(), LOGIN, &f)
+ 		}
+ 		for i := range loginSources {
+ 			if loginSources[i].IsDefault {
