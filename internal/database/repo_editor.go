@@ -21,14 +21,14 @@ import (
 
 	"github.com/gogs/git-module"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/cryptoutil"
-	dberrors "gogs.io/gogs/internal/database/errors"
-	"gogs.io/gogs/internal/gitutil"
-	"gogs.io/gogs/internal/osutil"
-	"gogs.io/gogs/internal/pathutil"
-	"gogs.io/gogs/internal/process"
-	"gogs.io/gogs/internal/tool"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/cryptoutil"
+	dberrors "github.com/SongZihuan/huan-gogs/internal/database/errors"
+	"github.com/SongZihuan/huan-gogs/internal/gitutil"
+	"github.com/SongZihuan/huan-gogs/internal/osutil"
+	"github.com/SongZihuan/huan-gogs/internal/pathutil"
+	"github.com/SongZihuan/huan-gogs/internal/process"
+	"github.com/SongZihuan/huan-gogs/internal/tool"
 )
 
 const (

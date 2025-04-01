@@ -17,14 +17,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"gogs.io/gogs/internal/auth"
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/dbutil"
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/osutil"
-	"gogs.io/gogs/internal/repoutil"
-	"gogs.io/gogs/internal/userutil"
-	"gogs.io/gogs/public"
+	"github.com/SongZihuan/huan-gogs/internal/auth"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/dbutil"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/osutil"
+	"github.com/SongZihuan/huan-gogs/internal/repoutil"
+	"github.com/SongZihuan/huan-gogs/internal/userutil"
+	"github.com/SongZihuan/huan-gogs/public"
 )
 
 func TestUser_BeforeCreate(t *testing.T) {

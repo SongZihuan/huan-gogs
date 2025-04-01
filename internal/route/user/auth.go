@@ -12,14 +12,14 @@ import (
 	"net/url"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/auth"
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/email"
-	"gogs.io/gogs/internal/form"
-	"gogs.io/gogs/internal/tool"
-	"gogs.io/gogs/internal/userutil"
+	"github.com/SongZihuan/huan-gogs/internal/auth"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/email"
+	"github.com/SongZihuan/huan-gogs/internal/form"
+	"github.com/SongZihuan/huan-gogs/internal/tool"
+	"github.com/SongZihuan/huan-gogs/internal/userutil"
 )
 
 const (

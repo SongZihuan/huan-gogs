@@ -1,4 +1,4 @@
-module gogs.io/gogs
+module github.com/SongZihuan/huan-gogs
 
 go 1.23.4
 

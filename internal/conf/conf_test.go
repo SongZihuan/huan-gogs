@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/ini.v1"
 
-	"gogs.io/gogs/internal/testutil"
+	"github.com/SongZihuan/huan-gogs/internal/testutil"
 )
 
 func TestInit(t *testing.T) {

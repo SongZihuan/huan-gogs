@@ -16,8 +16,8 @@ import (
 	"github.com/gogs/git-module"
 	api "github.com/gogs/go-gogs-client"
 
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/process"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/process"
 )
 
 // Release represents a release of repository.

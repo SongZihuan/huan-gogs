@@ -13,8 +13,8 @@ import (
 	gouuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 
-	"gogs.io/gogs/internal/cryptoutil"
-	"gogs.io/gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/cryptoutil"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
 )
 
 // AccessToken is a personal access token.

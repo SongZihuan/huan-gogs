@@ -18,10 +18,10 @@ import (
 
 	"github.com/gogs/git-module"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/database/errors"
-	"gogs.io/gogs/internal/process"
-	"gogs.io/gogs/internal/sync"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/database/errors"
+	"github.com/SongZihuan/huan-gogs/internal/process"
+	"github.com/SongZihuan/huan-gogs/internal/sync"
 )
 
 var MirrorQueue = sync.NewUniqueQueue(1000)

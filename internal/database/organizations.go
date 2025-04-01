@@ -14,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"gogs.io/gogs/internal/dbutil"
+	"github.com/SongZihuan/huan-gogs/internal/dbutil"
 )
 
 // OrganizationsStore is the storage layer for organizations.

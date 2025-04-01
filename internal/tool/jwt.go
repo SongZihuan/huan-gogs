@@ -7,8 +7,8 @@ package tool
 import (
 	"crypto/rand"
 	"fmt"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
 	"github.com/dgrijalva/jwt-go"
-	"gogs.io/gogs/internal/conf"
 	"time"
 )
 

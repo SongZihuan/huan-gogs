@@ -23,9 +23,9 @@ import (
 	log "unknwon.dev/clog/v2"
 	"xorm.io/xorm"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/process"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/process"
 )
 
 const (

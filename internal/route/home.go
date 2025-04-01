@@ -13,10 +13,10 @@ import (
 	"github.com/unknwon/paginater"
 	"gopkg.in/macaron.v1"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/route/user"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/route/user"
 )
 
 const (

@@ -14,9 +14,9 @@ import (
 	"xorm.io/builder"
 	"xorm.io/xorm"
 
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/repoutil"
-	"gogs.io/gogs/internal/userutil"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/repoutil"
+	"github.com/SongZihuan/huan-gogs/internal/userutil"
 )
 
 var ErrOrgNotExist = errors.New("Organization does not exist")

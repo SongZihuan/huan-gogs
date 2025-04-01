@@ -17,10 +17,10 @@ import (
 	"gopkg.in/macaron.v1"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/auth"
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/tool"
+	"github.com/SongZihuan/huan-gogs/internal/auth"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/tool"
 )
 
 type ToggleOptions struct {

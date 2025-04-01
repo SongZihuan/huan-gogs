@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/lfsutil"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/lfsutil"
 )
 
 func TestLFS(t *testing.T) {

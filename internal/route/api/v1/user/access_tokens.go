@@ -11,8 +11,8 @@ import (
 	api "github.com/gogs/go-gogs-client"
 	"gopkg.in/macaron.v1"
 
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/database"
 )
 
 // AccessTokensHandler is the handler for users access tokens API endpoints.

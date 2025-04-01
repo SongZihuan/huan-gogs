@@ -12,9 +12,9 @@ import (
 	"github.com/gogs/git-module"
 	api "github.com/gogs/go-gogs-client"
 
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/tool"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/tool"
 )
 
 const (

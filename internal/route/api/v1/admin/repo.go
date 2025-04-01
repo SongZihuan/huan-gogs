@@ -7,9 +7,9 @@ package admin
 import (
 	api "github.com/gogs/go-gogs-client"
 
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/route/api/v1/repo"
-	"gogs.io/gogs/internal/route/api/v1/user"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/route/api/v1/repo"
+	"github.com/SongZihuan/huan-gogs/internal/route/api/v1/user"
 )
 
 func CreateRepo(c *context.APIContext, form api.CreateRepoOption) {

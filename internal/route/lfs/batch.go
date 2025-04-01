@@ -12,10 +12,10 @@ import (
 	"gopkg.in/macaron.v1"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/lfsutil"
-	"gogs.io/gogs/internal/strutil"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/lfsutil"
+	"github.com/SongZihuan/huan-gogs/internal/strutil"
 )
 
 // POST /{owner}/{repo}.git/info/lfs/object/batch

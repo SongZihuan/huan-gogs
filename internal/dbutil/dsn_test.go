@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"gogs.io/gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
 )
 
 func TestParsePostgreSQLHostPort(t *testing.T) {

@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"gogs.io/gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
 )
 
 func TestTwoFactor_BeforeCreate(t *testing.T) {

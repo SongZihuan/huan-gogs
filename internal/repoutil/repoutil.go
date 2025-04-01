@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gogs.io/gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
 )
 
 // CloneLink represents different types of clone URLs of repository.

@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/macaron.v1"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/database"
 )
 
 func TestServeBatch(t *testing.T) {

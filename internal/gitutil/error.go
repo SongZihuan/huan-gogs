@@ -8,7 +8,7 @@ import (
 	"github.com/gogs/git-module"
 	"github.com/pkg/errors"
 
-	"gogs.io/gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
 )
 
 var _ errutil.NotFound = (*Error)(nil)

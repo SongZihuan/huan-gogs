@@ -11,8 +11,8 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/osutil"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/osutil"
 )
 
 // PublicKeysStore is the storage layer for public keys.

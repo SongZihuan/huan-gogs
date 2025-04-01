@@ -12,8 +12,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/lfsutil"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/lfsutil"
 )
 
 // LFSObject is the relation between an LFS object and a repository.

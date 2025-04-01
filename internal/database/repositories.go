@@ -14,8 +14,8 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/repoutil"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/repoutil"
 )
 
 // BeforeCreate implements the GORM create hook.

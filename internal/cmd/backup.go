@@ -19,9 +19,9 @@ import (
 	"gopkg.in/ini.v1"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/osutil"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/osutil"
 )
 
 var Backup = cli.Command{

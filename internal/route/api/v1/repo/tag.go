@@ -5,8 +5,8 @@
 package repo
 
 import (
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/route/api/v1/convert"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/route/api/v1/convert"
 )
 
 func ListTags(c *context.APIContext) {

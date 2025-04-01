@@ -7,7 +7,7 @@ package pam
 import (
 	"strings"
 
-	"gogs.io/gogs/internal/auth"
+	"github.com/SongZihuan/huan-gogs/internal/auth"
 )
 
 // Provider contains configuration of a PAM authentication provider.

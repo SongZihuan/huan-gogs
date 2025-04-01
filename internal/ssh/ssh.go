@@ -20,9 +20,9 @@ import (
 	"golang.org/x/crypto/ssh"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/osutil"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/osutil"
 )
 
 func cleanCommand(cmd string) string {

@@ -12,15 +12,15 @@ import (
 	"github.com/unknwon/com"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/auth"
-	"gogs.io/gogs/internal/auth/github"
-	"gogs.io/gogs/internal/auth/ldap"
-	"gogs.io/gogs/internal/auth/pam"
-	"gogs.io/gogs/internal/auth/smtp"
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/form"
+	"github.com/SongZihuan/huan-gogs/internal/auth"
+	"github.com/SongZihuan/huan-gogs/internal/auth/github"
+	"github.com/SongZihuan/huan-gogs/internal/auth/ldap"
+	"github.com/SongZihuan/huan-gogs/internal/auth/pam"
+	"github.com/SongZihuan/huan-gogs/internal/auth/smtp"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/form"
 )
 
 const (

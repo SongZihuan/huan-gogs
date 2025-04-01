@@ -9,7 +9,7 @@ package database
 import (
 	"sync"
 
-	auth "gogs.io/gogs/internal/auth"
+	auth "github.com/SongZihuan/huan-gogs/internal/auth"
 )
 
 // MockProvider is a mock implementation of the Provider interface (from the

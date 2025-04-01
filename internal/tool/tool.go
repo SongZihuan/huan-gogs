@@ -19,8 +19,8 @@ import (
 
 	"github.com/gogs/chardet"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/cryptoutil"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/cryptoutil"
 )
 
 // ShortSHA1 truncates SHA1 string length to at most 10.

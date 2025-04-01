@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"gogs.io/gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
 )
 
 func TestLoginSourceFiles_GetByID(t *testing.T) {

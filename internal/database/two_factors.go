@@ -15,9 +15,9 @@ import (
 	"gorm.io/gorm"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/cryptoutil"
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/strutil"
+	"github.com/SongZihuan/huan-gogs/internal/cryptoutil"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/strutil"
 )
 
 // BeforeCreate implements the GORM create hook.

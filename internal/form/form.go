@@ -13,7 +13,7 @@ import (
 	"github.com/unknwon/com"
 	"gopkg.in/macaron.v1"
 
-	"gogs.io/gogs/internal/lazyregexp"
+	"github.com/SongZihuan/huan-gogs/internal/lazyregexp"
 )
 
 const ERR_ALPHA_DASH_DOT_SLASH = "AlphaDashDotSlashError"

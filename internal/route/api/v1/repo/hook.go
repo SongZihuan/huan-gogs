@@ -13,9 +13,9 @@ import (
 
 	api "github.com/gogs/go-gogs-client"
 
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/route/api/v1/convert"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/route/api/v1/convert"
 )
 
 // https://github.com/gogs/go-gogs-client/wiki/Repositories#list-hooks

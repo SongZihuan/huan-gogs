@@ -11,8 +11,8 @@ import (
 
 	"xorm.io/xorm"
 
-	"gogs.io/gogs/internal/database/errors"
-	"gogs.io/gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/database/errors"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
 )
 
 const OWNER_TEAM = "Owners"

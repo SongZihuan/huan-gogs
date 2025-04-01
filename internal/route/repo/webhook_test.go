@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/mocks"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/mocks"
 )
 
 func Test_validateWebhook(t *testing.T) {

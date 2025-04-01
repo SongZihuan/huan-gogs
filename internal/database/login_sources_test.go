@@ -14,12 +14,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"gogs.io/gogs/internal/auth"
-	"gogs.io/gogs/internal/auth/github"
-	"gogs.io/gogs/internal/auth/ldap"
-	"gogs.io/gogs/internal/auth/pam"
-	"gogs.io/gogs/internal/auth/smtp"
-	"gogs.io/gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/auth"
+	"github.com/SongZihuan/huan-gogs/internal/auth/github"
+	"github.com/SongZihuan/huan-gogs/internal/auth/ldap"
+	"github.com/SongZihuan/huan-gogs/internal/auth/pam"
+	"github.com/SongZihuan/huan-gogs/internal/auth/smtp"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
 )
 
 func TestLoginSource_BeforeSave(t *testing.T) {

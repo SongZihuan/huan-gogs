@@ -5,7 +5,7 @@
 package context
 
 import (
-	"gogs.io/gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/database"
 )
 
 type APIOrganization struct {

@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"gogs.io/gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
 )
 
 type Type int

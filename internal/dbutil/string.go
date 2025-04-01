@@ -11,7 +11,7 @@ package dbutil
 import (
 	"fmt"
 
-	"gogs.io/gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
 )
 
 // Quote adds surrounding double quotes for all given arguments before being

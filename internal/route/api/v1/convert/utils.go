@@ -5,7 +5,7 @@
 package convert
 
 import (
-	"gogs.io/gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
 )
 
 // ToCorrectPageSize makes sure page size is in allowed range.

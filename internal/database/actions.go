@@ -20,12 +20,12 @@ import (
 	"gorm.io/gorm"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/lazyregexp"
-	"gogs.io/gogs/internal/repoutil"
-	"gogs.io/gogs/internal/strutil"
-	"gogs.io/gogs/internal/testutil"
-	"gogs.io/gogs/internal/tool"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/lazyregexp"
+	"github.com/SongZihuan/huan-gogs/internal/repoutil"
+	"github.com/SongZihuan/huan-gogs/internal/strutil"
+	"github.com/SongZihuan/huan-gogs/internal/testutil"
+	"github.com/SongZihuan/huan-gogs/internal/tool"
 )
 
 // ActionsStore is the storage layer for actions.

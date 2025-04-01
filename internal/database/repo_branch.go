@@ -12,8 +12,8 @@ import (
 	"github.com/gogs/git-module"
 	"github.com/unknwon/com"
 
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/tool"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/tool"
 )
 
 type Branch struct {

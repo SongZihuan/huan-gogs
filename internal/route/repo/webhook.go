@@ -16,12 +16,12 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"gopkg.in/macaron.v1"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/database/errors"
-	"gogs.io/gogs/internal/form"
-	"gogs.io/gogs/internal/netutil"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/database/errors"
+	"github.com/SongZihuan/huan-gogs/internal/form"
+	"github.com/SongZihuan/huan-gogs/internal/netutil"
 )
 
 const (

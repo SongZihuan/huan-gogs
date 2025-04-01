@@ -6,7 +6,7 @@ package email
 
 import (
 	"fmt"
-	"gogs.io/gogs/internal/tool"
+	"github.com/SongZihuan/huan-gogs/internal/tool"
 	"html/template"
 	"path/filepath"
 	"sync"
@@ -16,9 +16,9 @@ import (
 	"gopkg.in/macaron.v1"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/markup"
-	"gogs.io/gogs/templates"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/markup"
+	"github.com/SongZihuan/huan-gogs/templates"
 )
 
 const (

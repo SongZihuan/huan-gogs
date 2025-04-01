@@ -7,8 +7,8 @@ package org
 import (
 	api "github.com/gogs/go-gogs-client"
 
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/route/api/v1/convert"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/route/api/v1/convert"
 )
 
 func ListTeams(c *context.APIContext) {

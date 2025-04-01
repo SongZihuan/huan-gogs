@@ -16,11 +16,11 @@ import (
 
 	api "github.com/gogs/go-gogs-client"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/database/errors"
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/markup"
-	"gogs.io/gogs/internal/tool"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/database/errors"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/markup"
+	"github.com/SongZihuan/huan-gogs/internal/tool"
 )
 
 var ErrMissingIssueNumber = errors.New("No issue number specified")

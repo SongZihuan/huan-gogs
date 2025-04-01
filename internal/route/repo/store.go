@@ -11,7 +11,7 @@ package repo
 import (
 	"context"
 
-	"gogs.io/gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/database"
 )
 
 // Store is the data layer carrier for context middleware. This interface is

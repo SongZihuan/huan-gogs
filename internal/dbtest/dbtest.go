@@ -16,8 +16,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/dbutil"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/dbutil"
 )
 
 // NewDB creates a new test database and initializes the given list of tables

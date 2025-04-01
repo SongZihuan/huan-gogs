@@ -18,12 +18,12 @@ import (
 	"gopkg.in/macaron.v1"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/form"
-	"gogs.io/gogs/internal/lazyregexp"
-	"gogs.io/gogs/internal/template"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/form"
+	"github.com/SongZihuan/huan-gogs/internal/lazyregexp"
+	"github.com/SongZihuan/huan-gogs/internal/template"
 )
 
 // Context represents context of a request.

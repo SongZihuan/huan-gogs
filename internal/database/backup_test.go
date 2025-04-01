@@ -16,13 +16,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"gogs.io/gogs/internal/auth"
-	"gogs.io/gogs/internal/auth/github"
-	"gogs.io/gogs/internal/auth/pam"
-	"gogs.io/gogs/internal/cryptoutil"
-	"gogs.io/gogs/internal/dbtest"
-	"gogs.io/gogs/internal/lfsutil"
-	"gogs.io/gogs/internal/testutil"
+	"github.com/SongZihuan/huan-gogs/internal/auth"
+	"github.com/SongZihuan/huan-gogs/internal/auth/github"
+	"github.com/SongZihuan/huan-gogs/internal/auth/pam"
+	"github.com/SongZihuan/huan-gogs/internal/cryptoutil"
+	"github.com/SongZihuan/huan-gogs/internal/dbtest"
+	"github.com/SongZihuan/huan-gogs/internal/lfsutil"
+	"github.com/SongZihuan/huan-gogs/internal/testutil"
 )
 
 func TestDumpAndImport(t *testing.T) {

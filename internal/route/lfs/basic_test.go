@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/macaron.v1"
 
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/lfsutil"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/lfsutil"
 )
 
 var _ lfsutil.Storager = (*mockStorage)(nil)

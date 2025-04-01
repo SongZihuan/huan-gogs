@@ -13,8 +13,8 @@ import (
 	"github.com/urfave/cli"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/cmd"
-	"gogs.io/gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/cmd"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
 )
 
 func init() {

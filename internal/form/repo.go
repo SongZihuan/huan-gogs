@@ -12,9 +12,9 @@ import (
 	"github.com/unknwon/com"
 	"gopkg.in/macaron.v1"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/netutil"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/netutil"
 )
 
 // _______________________________________    _________.______________________ _______________.___.

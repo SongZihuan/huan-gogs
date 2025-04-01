@@ -22,12 +22,12 @@ import (
 
 	api "github.com/gogs/go-gogs-client"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/httplib"
-	"gogs.io/gogs/internal/netutil"
-	"gogs.io/gogs/internal/sync"
-	"gogs.io/gogs/internal/testutil"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/httplib"
+	"github.com/SongZihuan/huan-gogs/internal/netutil"
+	"github.com/SongZihuan/huan-gogs/internal/sync"
+	"github.com/SongZihuan/huan-gogs/internal/testutil"
 )
 
 var HookQueue = sync.NewUniqueQueue(1000)

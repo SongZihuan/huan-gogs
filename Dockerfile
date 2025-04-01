@@ -5,7 +5,7 @@ RUN apk --no-cache --no-progress add --virtual \
   git \
   linux-pam-dev
 
-WORKDIR /gogs.io/gogs
+WORKDIR /huan-gogs
 COPY . .
 
 RUN ./docker/build/install-task.sh
@@ -32,7 +32,7 @@ COPY docker/nsswitch.conf /etc/nsswitch.conf
 
 WORKDIR /app/gogs
 COPY docker ./docker
-COPY --from=binarybuilder /gogs.io/gogs/gogs .
+COPY --from=binarybuilder /huan-gogs/gogs .
 
 RUN ./docker/build/finalize.sh
 

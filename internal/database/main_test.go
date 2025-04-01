@@ -15,9 +15,9 @@ import (
 	_ "modernc.org/sqlite"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/dbtest"
-	"gogs.io/gogs/internal/testutil"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/dbtest"
+	"github.com/SongZihuan/huan-gogs/internal/testutil"
 )
 
 func TestMain(m *testing.M) {

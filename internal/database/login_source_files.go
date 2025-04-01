@@ -15,13 +15,13 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/ini.v1"
 
-	"gogs.io/gogs/internal/auth"
-	"gogs.io/gogs/internal/auth/github"
-	"gogs.io/gogs/internal/auth/ldap"
-	"gogs.io/gogs/internal/auth/pam"
-	"gogs.io/gogs/internal/auth/smtp"
-	"gogs.io/gogs/internal/errutil"
-	"gogs.io/gogs/internal/osutil"
+	"github.com/SongZihuan/huan-gogs/internal/auth"
+	"github.com/SongZihuan/huan-gogs/internal/auth/github"
+	"github.com/SongZihuan/huan-gogs/internal/auth/ldap"
+	"github.com/SongZihuan/huan-gogs/internal/auth/pam"
+	"github.com/SongZihuan/huan-gogs/internal/auth/smtp"
+	"github.com/SongZihuan/huan-gogs/internal/errutil"
+	"github.com/SongZihuan/huan-gogs/internal/osutil"
 )
 
 // loginSourceFilesStore is the in-memory interface for login source files stored on file system.

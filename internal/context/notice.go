@@ -11,9 +11,9 @@ import (
 	"github.com/unknwon/com"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/markup"
-	"gogs.io/gogs/internal/tool"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/markup"
+	"github.com/SongZihuan/huan-gogs/internal/tool"
 )
 
 // renderNoticeBanner checks if a notice banner file exists and loads the message to display

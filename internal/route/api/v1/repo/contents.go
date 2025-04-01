@@ -13,11 +13,11 @@ import (
 	"github.com/gogs/git-module"
 	"github.com/pkg/errors"
 
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/gitutil"
-	"gogs.io/gogs/internal/pathutil"
-	"gogs.io/gogs/internal/repoutil"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/gitutil"
+	"github.com/SongZihuan/huan-gogs/internal/pathutil"
+	"github.com/SongZihuan/huan-gogs/internal/repoutil"
 )
 
 type links struct {

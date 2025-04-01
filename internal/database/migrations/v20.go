@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"gogs.io/gogs/internal/cryptoutil"
+	"github.com/SongZihuan/huan-gogs/internal/cryptoutil"
 )
 
 func migrateAccessTokenToSHA256(db *gorm.DB) error {

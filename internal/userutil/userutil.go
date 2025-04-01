@@ -22,9 +22,9 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"gogs.io/gogs/internal/avatar"
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/strutil"
+	"github.com/SongZihuan/huan-gogs/internal/avatar"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/strutil"
 )
 
 // DashboardURLPath returns the URL path to the user or organization dashboard.

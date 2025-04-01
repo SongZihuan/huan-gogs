@@ -16,9 +16,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/osutil"
-	"gogs.io/gogs/public"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/osutil"
+	"github.com/SongZihuan/huan-gogs/public"
 )
 
 func TestDashboardURLPath(t *testing.T) {

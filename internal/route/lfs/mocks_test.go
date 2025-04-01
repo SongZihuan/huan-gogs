@@ -10,8 +10,8 @@ import (
 	"context"
 	"sync"
 
-	database "gogs.io/gogs/internal/database"
-	lfsutil "gogs.io/gogs/internal/lfsutil"
+	database "github.com/SongZihuan/huan-gogs/internal/database"
+	lfsutil "github.com/SongZihuan/huan-gogs/internal/lfsutil"
 )
 
 // MockStore is a mock implementation of the Store interface (from the

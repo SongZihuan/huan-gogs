@@ -9,11 +9,11 @@ import (
 
 	"github.com/unknwon/paginater"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/route/repo"
-	"gogs.io/gogs/internal/tool"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/route/repo"
+	"github.com/SongZihuan/huan-gogs/internal/tool"
 )
 
 const (

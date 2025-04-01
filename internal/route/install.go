@@ -18,17 +18,17 @@ import (
 	"gopkg.in/macaron.v1"
 	log "unknwon.dev/clog/v2"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/context"
-	"gogs.io/gogs/internal/cron"
-	"gogs.io/gogs/internal/database"
-	"gogs.io/gogs/internal/email"
-	"gogs.io/gogs/internal/form"
-	"gogs.io/gogs/internal/markup"
-	"gogs.io/gogs/internal/osutil"
-	"gogs.io/gogs/internal/ssh"
-	"gogs.io/gogs/internal/strutil"
-	"gogs.io/gogs/internal/template/highlight"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/context"
+	"github.com/SongZihuan/huan-gogs/internal/cron"
+	"github.com/SongZihuan/huan-gogs/internal/database"
+	"github.com/SongZihuan/huan-gogs/internal/email"
+	"github.com/SongZihuan/huan-gogs/internal/form"
+	"github.com/SongZihuan/huan-gogs/internal/markup"
+	"github.com/SongZihuan/huan-gogs/internal/osutil"
+	"github.com/SongZihuan/huan-gogs/internal/ssh"
+	"github.com/SongZihuan/huan-gogs/internal/strutil"
+	"github.com/SongZihuan/huan-gogs/internal/template/highlight"
 )
 
 const (

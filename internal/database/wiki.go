@@ -17,9 +17,9 @@ import (
 
 	"github.com/gogs/git-module"
 
-	"gogs.io/gogs/internal/conf"
-	"gogs.io/gogs/internal/repoutil"
-	"gogs.io/gogs/internal/sync"
+	"github.com/SongZihuan/huan-gogs/internal/conf"
+	"github.com/SongZihuan/huan-gogs/internal/repoutil"
+	"github.com/SongZihuan/huan-gogs/internal/sync"
 )
 
 var wikiWorkingPool = sync.NewExclusivePool()
