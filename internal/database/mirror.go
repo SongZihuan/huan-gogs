@@ -169,7 +169,7 @@ func parseRemoteUpdateOutput(output string) []*mirrorSyncResult {
 			continue
 		}
 
-		refName := lines[i][idx+3:]
+		refName := strings.Split(lines[i][idx+3:], " ")[0] // strings 总是返回大于等于0的数组
 		switch {
 		case strings.HasPrefix(lines[i], " * "): // New reference
 			results = append(results, &mirrorSyncResult{
@@ -197,7 +197,40 @@ func parseRemoteUpdateOutput(output string) []*mirrorSyncResult {
 				oldCommitID: shas[0],
 				newCommitID: shas[1],
 			})
-
+		case strings.HasPrefix(lines[i], " + "): // 强制更新
+			delimIdx := strings.Index(lines[i][3:], " ")
+			if delimIdx == -1 {
+				log.Error("SHA delimiter not found: %q", lines[i])
+				continue
+			}
+			shas := strings.Split(lines[i][3:delimIdx+3], "..")
+			if len(shas) != 2 {
+				log.Error("Expect two SHAs but not what found: %q", lines[i])
+				continue
+			}
+			results = append(results, &mirrorSyncResult{
+				refName:     refName,
+				oldCommitID: shas[0],
+				newCommitID: shas[1],
+			})
+		case strings.HasPrefix(lines[i], " + "): // 强制更新
+			delimIdx := strings.Index(lines[i][3:], " ")
+			if delimIdx == -1 {
+				log.Error("SHA delimiter not found: %q", lines[i])
+				continue
+			}
+			shas := strings.Split(lines[i][3:delimIdx+3], "..")
+			if len(shas) != 2 {
+				log.Error("Expect two SHAs but not what found: %q", lines[i])
+				continue
+			}
+			results = append(results, &mirrorSyncResult{
+				refName:     refName,
+				oldCommitID: shas[0],
+				newCommitID: shas[1],
+			})
+		case strings.HasPrefix(lines[i], " ！ "): // 更新失败
+			log.Error("parseRemoteUpdateOutput: update fail %q", lines[i])
 		default:
 			log.Warn("parseRemoteUpdateOutput: unexpected update line %q", lines[i])
 		}
